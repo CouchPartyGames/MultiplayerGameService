@@ -2,16 +2,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argo-projects-sync
+  name: infra-local
   namespace: argocd
 
   labels:
+    environment: local
     purpose: sync
 spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
     path: argocd/local/infra
     targetRevision: HEAD
 
@@ -31,16 +32,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dedicated-games-sync
+  name: games-local
   namespace: argocd
 
   labels:
     purpose: sync
+    environment: local
 spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
     path: argocd/local/games
     targetRevision: HEAD
 
@@ -60,16 +62,17 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dedicated-hosting-sync
+  name: games-orchestrator-local
   namespace: argocd
 
   labels:
     purpose: sync
+    environment: local
 spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
     path: argocd/local/games-orchestrator
     targetRevision: HEAD
 

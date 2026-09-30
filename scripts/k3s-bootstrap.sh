@@ -38,3 +38,9 @@ helm upgrade --install argo-cd argo-cd \
   --version "$ARGO_CD_CHART_VERSION" \
   --namespace argocd --create-namespace \
   --wait
+
+
+echo
+echo "ArgoCD Username: admin"
+echo -n "ArgoCD Password: "
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
