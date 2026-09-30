@@ -1,0 +1,16 @@
+region       = "us-east-1"
+cluster_name = "multiplayer-demo"
+
+# Replace with your workstation or VPN's public IPv4 address/range.
+admin_cidrs = ["203.0.113.10/32"]
+# Replace with an existing IAM administrator role ARN in your account.
+admin_principal_arns = ["arn:aws:iam::123456789012:role/EKSAdministrators"]
+
+# Set a supported minor version explicitly to control version selection.
+kubernetes_version = null
+instance_type      = "m6i.xlarge"
+disk_size_gb       = 50
+node_scaling       = { desired = 3, min = 1, max = 5 }
+
+# Set false for one NAT gateway per availability zone.
+single_nat_gateway = true

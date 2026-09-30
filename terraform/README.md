@@ -1,6 +1,6 @@
 # Terraform
 
-This directory contains Terraform installation scripts and separate GCP/GKE and Azure/AKS configurations. Run the commands below from the repository root.
+This directory contains Terraform installation scripts and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
 
 ## Install Terraform
 
@@ -49,4 +49,15 @@ cp terraform/azure/terraform.tfvars.example terraform/azure/terraform.tfvars
 # Edit subscription_id, admin_cidrs, and admin_group_object_ids.
 terraform -chdir=terraform/azure init
 terraform -chdir=terraform/azure plan
+```
+
+## AWS configuration
+
+`aws/` defines a VPC with public/private subnets across two zones, NAT routing, IAM roles, and an EKS cluster with managed nodes. It requires Terraform 1.5 through 1.x and AWS provider 6.x. See the [AWS setup](aws/README.md) for authentication, administrator access, and deployment instructions.
+
+```bash
+cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
+# Edit admin_cidrs and admin_principal_arns; authenticate with your AWS profile.
+terraform -chdir=terraform/aws init
+terraform -chdir=terraform/aws plan
 ```
