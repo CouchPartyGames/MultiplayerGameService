@@ -143,7 +143,7 @@ An Application is one file per component in the area directory. It reads a Helm 
 spec:
   project: hosting-local            # must equal metadata.name in project.yaml
   sources:
-  - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+  - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
     targetRevision: main
     ref: myRepo                     # exposes this repo as $myRepo
   - repoURL: https://agones.dev/chart/stable

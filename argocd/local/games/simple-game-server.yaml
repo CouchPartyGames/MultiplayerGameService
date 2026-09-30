@@ -24,7 +24,7 @@ spec:
   revisionHistoryLimit: 4
 
   sources:
-    - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
       targetRevision: main
       ref: myRepo
     - repoURL: https://couchpartygames.github.io/cpg-helm

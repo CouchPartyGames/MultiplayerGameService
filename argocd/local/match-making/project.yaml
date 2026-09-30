@@ -16,7 +16,7 @@ spec:
 
   sourceRepos:
   - 'https://open-match.dev/chart/stable'
-  - 'git@github.com:CouchPartyGames/MultiplayerGamesService.git'
+  - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
 
   destinations:
   - namespace: open-match

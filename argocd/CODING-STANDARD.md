@@ -40,7 +40,7 @@ Existing files that predate this standard (`agones-app.yaml`, `open-match-app.ya
 
 ## 3a. Repository URL
 
-The Git source is always `git@github.com:CouchPartyGames/MultiplayerGamesService.git`, tracking `targetRevision: main`, with `ref: myRepo`.
+The Git source is always `git@github.com:CouchPartyGames/MultiplayerGameService.git`, tracking `targetRevision: main`, with `ref: myRepo`.
 
 ## 4. Applications
 

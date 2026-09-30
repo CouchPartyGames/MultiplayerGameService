@@ -16,7 +16,7 @@ spec:
 
   sourceRepos:
   - 'https://couchpartygames.github.io/cpg-helm'
-  - 'git@github.com:CouchPartyGames/MultiplayerGamesService.git'
+  - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
 
   destinations:
   - namespace: '!agones-system'
