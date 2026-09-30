@@ -1,0 +1,17 @@
+project_id   = "your-gcp-project-id"
+region       = "us-east1"
+zone         = "us-east1-b"
+cluster_name = "multiplayer-demo"
+
+# Replace with your workstation or VPN's public IPv4 address/range.
+admin_cidrs = ["203.0.113.10/32"]
+
+node_count   = 3
+machine_type = "e2-standard-4"
+disk_size_gb = 50
+
+# Enable when deploying Agones game servers using its default UDP port range.
+enable_agones_udp = false
+game_client_cidrs = ["0.0.0.0/0"]
+
+deletion_protection = true

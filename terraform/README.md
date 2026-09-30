@@ -1,0 +1,40 @@
+# Terraform
+
+This directory contains Terraform installation scripts and a GCP configuration for a GKE cluster. Run the commands below from the repository root.
+
+## Install Terraform
+
+On Linux (amd64 or arm64), install `curl`, `unzip`, and `sha256sum`, then run:
+
+```bash
+./terraform/terraform-install-linux.sh
+```
+
+The Linux script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory.
+
+On macOS, install Homebrew first, then run:
+
+```bash
+./terraform/terraform-install-mac.sh
+```
+
+The macOS script installs Terraform from the official HashiCorp Homebrew tap. Both installers source `version.sh`. Its `TERRAFORM_VERSION` default controls the Linux download; Homebrew selects the macOS formula version. Override the Linux version for one run with:
+
+```bash
+TERRAFORM_VERSION=1.16.4 ./terraform/terraform-install-linux.sh
+```
+
+Check the installed version with `terraform version`.
+
+## GCP configuration
+
+`gcp/` defines a single-zone GKE cluster, its VPC and subnet, a node service account, and an optional Agones UDP firewall rule. It requires Terraform 1.5 through 1.x and Google provider 7.x. Before planning, authenticate to GCP and provide a project with billing enabled and the permissions needed to create these resources.
+
+```bash
+cp terraform/gcp/terraform.tfvars.example terraform/gcp/terraform.tfvars
+# Edit project_id and admin_cidrs in terraform/gcp/terraform.tfvars.
+terraform -chdir=terraform/gcp init
+terraform -chdir=terraform/gcp plan
+```
+
+Review the plan and estimated GCP costs before applying it. The cluster has deletion protection enabled by default.
