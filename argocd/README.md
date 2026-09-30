@@ -33,6 +33,8 @@ argocd/
 | `<purpose>/` | Groups related applications by responsibility, such as authentication, matchmaking, or dedicated game hosting. Production currently uses component names (`agones` and `open-match`) for these groups. |
 | Files within `<purpose>/` | Define Applications, ApplicationSets, and usually an AppProject with repository and destination permissions. Some folders also contain supporting Kubernetes resources, such as certificates or a backup CronJob. Helm values are generally stored separately under `helm/external-values/`. |
 
+Application, project, and values conventions are documented in [Setup conventions](#setup-conventions) below and enforced by [CODING-STANDARD.md](CODING-STANDARD.md).
+
 Folder names organize the repository; each manifest's project and destination fields determine its ArgoCD permissions and deployment target. A purpose folder is included in synchronization only when an Application references it or its manifests are registered separately.
 
 ## Local components
@@ -111,23 +113,87 @@ These findings come from inspecting the checked-in manifests and checking YAML s
 | Duplicate authentication names | Both Keycloak alternatives and `openldap-ha.yaml` use the Application name `keycloak`. OpenLDAP also lacks `spec.destination`. |
 | Duplicate general names | `general/mailhog.yaml` and `general/tempo.yaml` still name their Application `cert-manager`, conflicting with `infra/cert-manager.yaml` if registered. |
 | Cross-area database name | Authentication PostgreSQL and registry PostgreSQL HA both use Application name `postgresql` in `argocd`. |
-| Missing values | Agones references `$myRepo/agones-local.yaml`, but the file is at `helm/external-values/agones-local.yaml`. Matchmaking components references the absent `helm/external-values/open-match-components-local.yaml`. |
+| Missing values | Matchmaking components references `helm/external-values/local/open-match-components-local.yaml`, which does not exist yet. |
 | Repository permissions | `matchmaking-local` does not allow the custom components chart repository. `authentication` does not allow the OpenLDAP or Bitnami OCI repository URLs used by its applications. |
 | Chart/value selection | ingress-nginx points at the Codecentric chart repository and needs its chart source verified. The Bitnami Keycloak alternative references `keycloak-local.yaml` despite a separate `keycloak-bitnami-local.yaml` being present; verify the chart-specific values before selecting it. |
 | Undefined project | Registry PostgreSQL HA references `postgresql-ha`, but the folder only defines `harbor`. |
 | YAML syntax | The ArgoCD backup CronJob and hosting project contain tabs that fail YAML parsing. Both production ApplicationSets fail parsing on unquoted template expressions. |
 | Backup placeholder | The backup CronJob has no image, incomplete command arguments and pod configuration, and no working backup destination. It is not a usable backup implementation. |
 
+## Setup conventions
+
+Each area directory is a self-contained unit made of one AppProject, its Applications, and the values files they read. The rules for writing these files are in [CODING-STANDARD.md](CODING-STANDARD.md).
+
+### AppProject files
+
+Every area has exactly one `project.yaml`:
+
+```text
+argocd/local/dedicated-hosting/project.yaml   # AppProject hosting-local
+argocd/local/match-making/project.yaml        # AppProject matchmaking-local
+```
+
+An AppProject defines what its Applications may do: `sourceRepos` (chart repositories and this Git repository), `destinations` (cluster and namespaces), and the allowed resource kinds. Its `metadata.name` follows `<area>-<env>`; `infra` is the shared-infrastructure exception. Existing names `games` (dedicated-games) predate this rule and are renamed when that area is next changed.
+
+### Application files
+
+An Application is one file per component in the area directory. It reads a Helm chart and a values file from this repository using two sources:
+
+```yaml
+spec:
+  project: hosting-local            # must equal metadata.name in project.yaml
+  sources:
+  - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    targetRevision: main
+    ref: myRepo                     # exposes this repo as $myRepo
+  - repoURL: https://agones.dev/chart/stable
+    chart: agones
+    targetRevision: 1.38.0          # chart version is pinned here
+    helm:
+      valueFiles:
+      - $myRepo/helm/external-values/local/agones-local.yaml
+  destination:
+    name: in-cluster
+    namespace: agones-system
+```
+
+The chart repository MUST be in the project's `sourceRepos` and the destination namespace MUST be allowed by its `destinations`.
+
+### Helm values files
+
+Values files live in `helm/external-values/<env>/` and are named `<app>-<env>.yaml`:
+
+```text
+helm/external-values/
+├── local/
+│   ├── agones-local.yaml
+│   ├── argocd-local.yaml
+│   ├── cert-manager-local.yaml
+│   ├── open-match-local.yaml
+│   ├── simple-game-local.yaml
+│   └── ...
+└── prod/
+    ├── agones-prod.yaml
+    ├── argocd-prod.yaml
+    ├── keycloak-prod.yaml
+    ├── open-match-prod.yaml
+    └── postgresql-prod.yaml
+```
+
+Values files were previously inconsistent (some at the top level, some named `*.values.yaml`). They now all follow the pattern above. The pre-existing helper scripts `install-keycloak.sh` and `install-postgresql.sh` remain in `helm/external-values/local/` and should move to `scripts/`.
+
+To add a component: create `<app>.yaml` in the area directory, add its chart repository to `project.yaml`, add `helm/external-values/<env>/<app>-<env>.yaml`, and reference that path from `valueFiles`. Then render the chart (see [Editing and validation](#editing-and-validation)).
+
 ## Editing and validation
 
-Keep chart versions and values paths aligned, and ensure every application's `spec.project`, source repositories, and destination match its AppProject. Use two-space YAML indentation and unique Application names within the ArgoCD namespace. Store new secrets through the repository's SOPS and age workflow.
+Follow [CODING-STANDARD.md](CODING-STANDARD.md). Keep chart versions and values paths aligned, and ensure every application's `spec.project`, source repositories, and destination match its AppProject. Use two-space YAML indentation and unique Application names within the ArgoCD namespace. Store new secrets through the repository's SOPS and age workflow.
 
 Render changed Helm values using the chart version pinned in the relevant manifest:
 
 ```bash
 helm template <release> <repo>/<chart> \
   --version <targetRevision> \
-  -f helm/external-values/<values-file>.yaml
+  -f helm/external-values/<env>/<app>-<env>.yaml
 ```
 
 Where a suitable cluster has the required CRDs installed, validate changed manifests before syncing:

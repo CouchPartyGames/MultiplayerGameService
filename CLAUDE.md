@@ -37,7 +37,7 @@ kubectl apply -f argocd/local/sync-all.yaml
 kubectl port-forward svc/argo-cd-argocd-server -n argocd 8080:443
 
 # Render a chart with a values file before committing a values change
-helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<file>.yaml
+helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<env>/<app>-<env>.yaml
 ```
 
 Validate manifest edits with `kubectl apply --dry-run=server -f <file>` against a cluster that has ArgoCD CRDs installed.
@@ -47,6 +47,6 @@ Validate manifest edits with `kubectl apply --dry-run=server -f <file>` against 
 Check for these before assuming a manifest works as written:
 - `sync-all.yaml`: `match-making-sync` points at `argocd/local/dedicated-hosting` instead of `match-making`. `general/` and `authentication/` have no sync app.
 - Duplicate Application names in the same namespace, where the last one applied wins: `agones-local` in both `agones-app.yaml` and `agones-appset.yaml`; `open-match-local` in `open-match-app.yaml`, `components.yaml`, and the appset. `mailhog.yaml` and `tempo.yaml` in `general/` are both named `cert-manager`.
-- `agones-app.yaml` references `$myRepo/agones-local.yaml`, but the file is at `helm/external-values/agones-local.yaml`. `components.yaml` references `open-match-components-local.yaml`, which does not exist.
+- `components.yaml` references `open-match-components-local.yaml`, which does not exist.
 - In prod, the Agones appset uses project `agones-prod`, but the AppProject is named `hosting-prod`. Its labels `{{region}}` / `{{provider}}` are unquoted, which is invalid YAML.
 - `argocd/local/argo-projects/argo-cd-backup.yaml` uses tab indentation and is invalid YAML.

@@ -9,14 +9,14 @@ This repository contains Kubernetes infrastructure for a multiplayer game demo, 
 - `./scripts/minikube.sh` starts the local `openmatch` cluster (8 CPUs, 12 GB RAM).
 - `./scripts/install-argocd.sh` installs ArgoCD after the cluster starts.
 - `kubectl apply -f argocd/local/sync-all.yaml` registers the local applications.
-- `helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<file>.yaml` renders a chart with changed values. Use the version pinned in its ArgoCD manifest.
+- `helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<env>/<app>-<env>.yaml` renders a chart with changed values. Use the version pinned in its ArgoCD manifest.
 - `kubectl apply --dry-run=server -f <manifest.yaml>` validates Kubernetes manifests against a cluster with the required CRDs.
 
 There is no repository-wide build command or automated test suite. ArgoCD tracks `main`, so local edits reach the cluster only after they are pushed.
 
 ## Coding Style & Naming Conventions
 
-Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `agones-local.yaml` and `agones-prod.yaml`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions.
+Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `local/agones-local.yaml` and `prod/agones-prod.yaml` under `helm/external-values/`. See `argocd/CODING-STANDARD.md`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions.
 
 ## Testing Guidelines
 
