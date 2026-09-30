@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infra
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+
+  labels:
+    environment: local
+  # Finalizer that ensures that project is not deleted until it is not referenced by any application
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Tools for promoting and deploying internal cluster infrastructure
+
+  sourceRepos:
+    - https://argoproj.github.io/argo-helm
+    - https://charts.jetstack.io
+    - ghcr.io/akuity/kargo-charts
+    - git@github.com:CouchPartyGames/multiplayer-service-demo.git
+
+  destinations:
+    - namespace: cert-manager
+      name: in-cluster
+    # cert-manager creates leader-election RBAC in kube-system.
+    - namespace: kube-system
+      name: in-cluster
+    - namespace: argo-rollouts
+      name: in-cluster
+    - namespace: argocd
+      name: in-cluster
+    - namespace: kargo
+      name: in-cluster
+    - namespace: kargo-cluster-secrets
+      name: in-cluster
+    - namespace: kargo-system-resources
+      name: in-cluster
+    - namespace: kargo-shared-resources
+      name: in-cluster
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

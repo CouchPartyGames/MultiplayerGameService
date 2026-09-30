@@ -19,6 +19,7 @@ argocd/
 │   ├── dedicated-games/
 │   ├── dedicated-hosting/
 │   ├── general/
+│   ├── infra/
 │   └── match-making/
 └── prod/
     ├── agones/
@@ -38,13 +39,14 @@ Folder names organize the repository; each manifest's project and destination fi
 
 | Directory | Components and pinned chart versions | AppProject | Target namespaces |
 | --- | --- | --- | --- |
-| [argo-projects](local/argo-projects/) | ArgoCD `5.24.1`; unfinished backup CronJob | `argo-projects` | `argocd` |
+| [infra](local/infra/README.md) | ArgoCD `5.24.1`; Kargo `1.11.5`; cert-manager `v1.14.4`; Argo Rollouts `2.43.2` | `infra` | `argocd`, `kargo`, `cert-manager`, `kube-system` (leader-election RBAC), `argo-rollouts`, `kargo-cluster-secrets`, `kargo-system-resources`, `kargo-shared-resources` |
+| [argo-projects](local/argo-projects/) | Unfinished backup CronJob, excluded from synchronization | — | `argocd` |
 | [dedicated-hosting](local/dedicated-hosting/) | Agones `1.38.0`, defined as both an Application and an ApplicationSet | `hosting-local` | `agones-system` |
 | [dedicated-games](local/dedicated-games/) | `simple-game-server` using the `fleet` chart `1.0.9` | `games` | `default` |
 | [match-making](local/match-making/) | Open Match `1.8.1`; custom `open-match-components` chart `0.0.3` | `matchmaking-local` | `open-match` |
 | [authentication](local/authentication/) | Keycloak alternatives: `keycloakx` `2.1.0` and Bitnami `keycloak` `15.1.4`; PostgreSQL `12.1.6`; OpenLDAP `4.0.2`; ingress-nginx `4.4.2`; MailHog `5.2.2` | `authentication` | `keycloak`; OpenLDAP has no destination |
 | [container-registry](local/container-registry/) | Harbor `1.10.3`, Redis `17.2.0`, PostgreSQL HA `9.4.5` | `harbor`; PostgreSQL HA references an undefined `postgresql-ha` project | `default` |
-| [general](local/general/) | cert-manager `v1.14.4`, self-signed issuer and allocator certificate; Prometheus `25.18.0` and operator CRDs `10.0.0`; Grafana `7.3.7`; Tempo `1.7.2`; Fluent Bit `0.46.0`; Postfix/mail `3.5.1`; MailHog `5.2.2` | Built-in `default` | `cert-manager`, `agones-system`, `monitoring`, `logging`, `default` |
+| [general](local/general/) | Self-signed issuer and allocator certificate; Prometheus `25.18.0` and operator CRDs `10.0.0`; Grafana `7.3.7`; Tempo `1.7.2`; Fluent Bit `0.46.0`; Postfix/mail `3.5.1`; MailHog `5.2.2` | Built-in `default` | `agones-system`, `monitoring`, `logging`, `default` |
 
 Versions above are the pins in this repository, not a claim that the upstream charts have been rendered or tested together. The allocator certificate creates `allocator-tls` in `agones-system` for `127.0.0.1`, using the `selfsigned` ClusterIssuer.
 
@@ -54,13 +56,17 @@ Versions above are the pins in this repository, not a claim that the upstream ch
 
 | Parent Application | Current source path |
 | --- | --- |
-| `argo-projects-sync` | `argocd/local/argo-projects` |
+| `argo-projects-sync` | `argocd/local/infra` |
 | `dedicated-games-sync` | `argocd/local/dedicated-games` |
 | `dedicated-hosting-sync` | `argocd/local/dedicated-hosting` |
 | `match-making-sync` | `argocd/local/dedicated-hosting` — currently duplicates hosting |
 | `container-registry-sync` | `argocd/local/container-registry` |
 
 The parents use the `default` project and track Git `HEAD`. Child Applications with a Git values source generally track `main` and refer to it as `myRepo`; Helm value paths begin with `$myRepo/`. Changes must reach the tracked remote Git revision before ArgoCD can reconcile them. The checked-in SSH repository URLs require appropriate repository access in ArgoCD.
+
+The infrastructure parent retains the name `argo-projects-sync` so existing installations keep the same owner for the `argo-cd` Application. It now reads `infra/`, where the `infra` AppProject is applied before its Applications. The unfinished backup CronJob remains outside this synchronized directory.
+
+The `infra` directory also installs cert-manager and Argo Rollouts. Kargo integrates with ArgoCD and uses Rollouts for promotion verification. Before syncing Kargo, provision its `kargo-api` Secret through SOPS + age. See the [infrastructure README](local/infra/README.md) for component roles, Secret keys, startup dependencies, and validation commands.
 
 All five parents enable automatic sync, pruning, and self-healing. Most child applications also enable these settings, but the Agones definitions have automatic sync commented out. Many applications request namespace creation and apply only out-of-sync resources. The parent applications' `default` destination namespace does not override namespaces explicitly set in child manifests.
 
@@ -103,7 +109,7 @@ These findings come from inspecting the checked-in manifests and checking YAML s
 | Duplicate Agones application | The standalone Agones Application and its ApplicationSet both define `agones-local`. Choose one owner. |
 | Duplicate matchmaking application | `components.yaml`, `open-match-app.yaml`, and the ApplicationSet template all use `open-match-local`. The components application needs a distinct name, and the core deployment needs one owner. |
 | Duplicate authentication names | Both Keycloak alternatives and `openldap-ha.yaml` use the Application name `keycloak`. OpenLDAP also lacks `spec.destination`. |
-| Duplicate general names | `cert-manager.yaml`, `mailhog.yaml`, and `tempo.yaml` all name their Application `cert-manager`. |
+| Duplicate general names | `general/mailhog.yaml` and `general/tempo.yaml` still name their Application `cert-manager`, conflicting with `infra/cert-manager.yaml` if registered. |
 | Cross-area database name | Authentication PostgreSQL and registry PostgreSQL HA both use Application name `postgresql` in `argocd`. |
 | Missing values | Agones references `$myRepo/agones-local.yaml`, but the file is at `helm/external-values/agones-local.yaml`. Matchmaking components references the absent `helm/external-values/open-match-components-local.yaml`. |
 | Repository permissions | `matchmaking-local` does not allow the custom components chart repository. `authentication` does not allow the OpenLDAP or Bitnami OCI repository URLs used by its applications. |

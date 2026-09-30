@@ -12,7 +12,7 @@ spec:
 
   source:
     repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
-    path: argocd/local/argo-projects
+    path: argocd/local/infra
     targetRevision: HEAD
 
   destination:
@@ -144,4 +144,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
-

@@ -12,18 +12,18 @@ metadata:
     purpose: certificates
 
 spec:
-  project: default
+  project: infra
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo.git
-    targetRevision: main 
-    ref: myRepo
-  - repoURL: https://charts.jetstack.io
-    targetRevision: v1.14.4
-    chart: cert-manager
-    helm:
-      valueFiles: 
-      - $myRepo/helm/external-values/local/cert-manager-local.yaml
+    - repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo.git
+      targetRevision: main
+      ref: myRepo
+    - repoURL: https://charts.jetstack.io
+      targetRevision: v1.14.4
+      chart: cert-manager
+      helm:
+        valueFiles:
+          - $myRepo/helm/external-values/local/cert-manager-local.yaml
 
   destination:
     name: in-cluster
@@ -36,3 +36,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+
+  revisionHistoryLimit: 3
