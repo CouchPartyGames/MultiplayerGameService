@@ -7,7 +7,7 @@ them as one infrastructure group.
 
 | Definition | Purpose | Chart version | Destination namespace |
 | --- | --- | --- | --- |
-| [argo-cd.yaml](argo-cd.yaml) | Reconciles Kubernetes resources with the desired configuration in Git. | `5.24.1` | `argocd` |
+| [argo-cd.yaml](argo-cd.yaml) | Reconciles Kubernetes resources with the desired configuration in Git. | `10.9.5` | `argocd` |
 | [kargo.yaml](kargo.yaml) | Promotes selected artifact versions between stages and uses ArgoCD to deploy them. | `1.11.5` | `kargo` |
 | [cert-manager.yaml](cert-manager.yaml) | Manages TLS certificates, including the certificates used by Kargo's API and admission webhooks. | `v1.14.4` | `cert-manager` |
 | [argo-rollouts.yaml](argo-rollouts.yaml) | Provides progressive delivery and the AnalysisTemplate/AnalysisRun resources Kargo uses to verify promotions. | `2.43.2` | `argo-rollouts` |
@@ -20,11 +20,9 @@ secrets, system resources, and shared resources; these are allowed by the projec
 
 ## How synchronization works
 
-[../sync-all.yaml](../sync-all.yaml) registers the parent Application
-`argo-projects-sync`, which reads this directory. The existing parent name is
-retained so the ArgoCD Application keeps the same owner after moving from
-`argo-projects/` to `infra/`. The project has sync wave `-1`, so it is applied
-before the child Application definitions.
+[../sync-all-groups.yaml](../sync-all-groups.yaml) registers the parent
+Application `infra-local`, which reads this directory. The project has sync wave
+`-1`, so it is applied before the child Application definitions.
 
 The parent tracks Git `HEAD`; application values sources track `main`. Local
 edits must reach the tracked remote revision before ArgoCD can reconcile them.
@@ -32,8 +30,14 @@ All four applications enable automatic synchronization, pruning, and namespace
 creation. Kargo, cert-manager, and Argo Rollouts also enable self-healing and
 server-side apply.
 
+The `argo-cd` Application manages the ArgoCD installation itself. It installs the
+chart as release `argo-cd` in `argocd`, the same release the bootstrap scripts
+create, so its `targetRevision` must match `ARGO_CD_CHART_VERSION` in
+`scripts/versions.sh`. Otherwise the first sync changes the ArgoCD version the
+bootstrap installed.
+
 ArgoCD, Kargo, and cert-manager use values from
-[helm/external-values/local](../../../helm/external-values/local/). Argo Rollouts
+[helm/external-values/local/infra](../../../helm/external-values/local/infra/). Argo Rollouts
 uses its pinned chart defaults, which install its CRDs and a controller with
 cluster-wide permissions. Kargo's ArgoCD and Argo Rollouts integrations are
 enabled. Promotion stages, artifact subscriptions, rollout strategies, and
@@ -44,14 +48,15 @@ delivered.
 
 1. Bootstrap ArgoCD using the repository's [local cluster scripts](../../../scripts/README.md)
    and configure its access to the Git repository.
-2. Provision the `kargo-api` Secret in the `kargo` namespace through the SOPS + age
-   workflow. It must contain `ADMIN_ACCOUNT_PASSWORD_HASH` (a bcrypt password
-   hash) and `ADMIN_ACCOUNT_TOKEN_SIGNING_KEY`. The Kargo values reference this
-   existing Secret.
+2. Provision the `kargo-api` Secret in the `kargo` namespace. It must contain
+   `ADMIN_ACCOUNT_PASSWORD_HASH` (a bcrypt password hash) and
+   `ADMIN_ACCOUNT_TOKEN_SIGNING_KEY`. The Kargo values reference this existing
+   Secret. SOPS + age decryption is not set up in ArgoCD yet, so create it by hand
+   as shown in [Troubleshooting](#kargo-api-pod-stuck-in-createcontainerconfigerror).
 3. Register the parent applications from the repository root:
 
    ```bash
-   kubectl apply -f argocd/local/sync-all.yaml
+   kubectl apply -f argocd/local/sync-all-groups.yaml
    ```
 
 4. Confirm cert-manager and Argo Rollouts are healthy before relying on Kargo.
@@ -104,7 +109,7 @@ Render the charts with their pinned versions before changing chart settings:
 helm template cert-manager cert-manager \
   --repo https://charts.jetstack.io --version v1.14.4 \
   --namespace cert-manager \
-  -f helm/external-values/local/cert-manager-local.yaml
+  -f helm/external-values/local/infra/cert-manager-local.yaml
 
 helm template argo-rollouts argo-rollouts \
   --repo https://argoproj.github.io/argo-helm --version 2.43.2 \
@@ -112,7 +117,7 @@ helm template argo-rollouts argo-rollouts \
 
 helm template kargo oci://ghcr.io/akuity/kargo-charts/kargo \
   --version 1.11.5 --namespace kargo \
-  -f helm/external-values/local/kargo-local.yaml
+  -f helm/external-values/local/infra/kargo-local.yaml
 ```
 
 With ArgoCD CRDs installed, validate the project and application manifests using

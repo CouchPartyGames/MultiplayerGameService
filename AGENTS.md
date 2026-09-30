@@ -2,21 +2,20 @@
 
 ## Project Structure & Module Organization
 
-This repository contains Kubernetes infrastructure for a multiplayer game demo, not application source code. `argocd/local/` holds ArgoCD projects and applications for minikube; `argocd/prod/` contains early GKE configurations. `argocd/local/sync-all.yaml` is the local app-of-apps entry point. Chart settings live in `helm/external-values/`, bootstrap and manual installation scripts in `scripts/`, and the custom Keycloak image in `docker/keycloak-custom/`. `terraform/` and `gitops/` are placeholders. There are no test or asset directories.
+This repository contains Kubernetes infrastructure for a multiplayer game demo, not application source code. `argocd/local/` holds ArgoCD projects and applications for a local minikube, kind, or k3s cluster; there is no production ArgoCD environment. `argocd/local/sync-all-groups.yaml` is the local app-of-apps entry point; it registers `infra/`, `games/`, and `games-orchestrator/`, but not `match-making/` or `general/`. Chart settings live in `helm/external-values/`, cluster bootstrap and CLI installer scripts in `scripts/`, and GCP, Azure, and AWS cluster configurations in `terraform/`. There are no test or asset directories.
 
 ## Build, Test, and Development Commands
 
-- `./scripts/minikube.sh` starts the local `openmatch` cluster (8 CPUs, 12 GB RAM).
-- `./scripts/install-argocd.sh` installs ArgoCD after the cluster starts.
-- `kubectl apply -f argocd/local/sync-all.yaml` registers the local applications.
-- `helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<env>/<app>-<env>.yaml` renders a chart with changed values. Use the version pinned in its ArgoCD manifest.
+- `./scripts/minikube-bootstrap.sh` starts the local `multiplayer-demo` minikube profile (8 CPUs, 12 GB RAM) and installs ArgoCD. `scripts/README.md` covers the kind and k3s alternatives.
+- `kubectl apply -f argocd/local/sync-all-groups.yaml` registers the local applications.
+- `helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<env>/<area>/<app>-<env>.yaml` renders a chart with changed values. Use the version pinned in its ArgoCD manifest.
 - `kubectl apply --dry-run=server -f <manifest.yaml>` validates Kubernetes manifests against a cluster with the required CRDs.
 
 There is no repository-wide build command or automated test suite. ArgoCD tracks `main`, so local edits reach the cluster only after they are pushed.
 
 ## Coding Style & Naming Conventions
 
-Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `local/agones-local.yaml` and `prod/agones-prod.yaml` under `helm/external-values/`. See `argocd/CODING-STANDARD.md`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions.
+Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `local/games-orchestrator/agones-local.yaml` under `helm/external-values/`. See `argocd/CODING-STANDARD.md`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions.
 
 ## Testing Guidelines
 
@@ -28,4 +27,4 @@ Recent commits commonly use `chore:`, `fix:`, or `feat:` followed by a short imp
 
 ## Secrets & Configuration
 
-Use the repository's SOPS and age workflow for new secrets; do not add plaintext credentials. Check chart versions and values paths together when updating an application.
+SOPS + age is the intended secrets workflow but is not yet configured in ArgoCD, so secrets such as `kargo-api` are created by hand. Keep plaintext credentials out of committed files. Check chart versions and values paths together when updating an application.

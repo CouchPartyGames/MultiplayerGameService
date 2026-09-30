@@ -22,15 +22,15 @@ All names are lowercase kebab-case with a `.yaml` extension (never `.yml`).
 | ApplicationSet | `argocd/<env>/<area>/` | `<app>-appset.yaml` |
 | Extra Application for the same component | `argocd/<env>/<area>/` | `<app>-<qualifier>.yaml` (`open-match-components.yaml`) |
 | Supporting resources (certificates, issuers) | `argocd/<env>/<area>/` | `<kind-or-purpose>.yaml`, lowercase kind (`clusterissuer.yaml`) |
-| App-of-apps entry point | `argocd/<env>/` | `sync-all.yaml` |
-| Helm values | `helm/external-values/<env>/` | `<app>-<env>.yaml` |
+| App-of-apps entry point | `argocd/<env>/` | `sync-all-groups.yaml`, one parent Application per area |
+| Helm values | `helm/external-values/<env>/<area>/` | `<app>-<env>.yaml` |
 | Area README | `argocd/<env>/<area>/` | `README.md`, only when the area needs more than the root README says |
 
-Existing files that predate this standard (`agones-app.yaml`, `open-match-app.yaml`, `components.yaml`, `simple-game-server.yaml`) SHOULD be renamed when they are next touched.
+Existing files that predate this standard (`open-match-app.yaml`, `components.yaml`, `simple-game-server.yaml`) SHOULD be renamed when they are next touched.
 
 ## 3. AppProjects
 
-- `metadata.name` is `<area>-<env>` (`hosting-local`, `matchmaking-local`, `games-local`). `infra` is the single existing exception because it is shared infrastructure.
+- `metadata.name` is `<area>-<env>` (`matchmaking-local`). `infra` is an exception because it is shared infrastructure. `games` (in `games/`) and `hosting-local` (in `games-orchestrator/`) predate the rule; renaming a project also means updating `spec.project` in every Application that uses it.
 - `metadata.namespace: argocd`. Always set the `environment` label.
 - `spec.description` states the area and environment.
 - `sourceRepos` lists every chart repository and this Git repository, and nothing else. Add the chart repository in the same change that adds an Application using it.
@@ -50,7 +50,7 @@ Field order: `metadata`, `spec.project`, `spec.sources`, `spec.destination`, `sp
 - `metadata.namespace: argocd`. Labels: `environment` (required) and `purpose` (optional).
 - `spec.project` MUST equal the `metadata.name` of the area's `project.yaml`.
 - Use multi-source: first the Git source (`ref: myRepo`), then the chart source. Pin the chart with an exact `targetRevision` (no ranges, no `latest`, no `*`).
-- Values files are listed in `helm.valueFiles` as `$myRepo/helm/external-values/<env>/<app>-<env>.yaml`. Use the full path from the repository root. Do not inline `helm.values` for anything larger than a one-line override.
+- Values files are listed in `helm.valueFiles` as `$myRepo/helm/external-values/<env>/<area>/<app>-<env>.yaml`. Use the full path from the repository root. Do not inline `helm.values` for anything larger than a one-line override.
 - `destination` uses `name: in-cluster` and an explicit `namespace`.
 - Sync policy defaults:
 
@@ -79,7 +79,7 @@ Field order: `metadata`, `spec.project`, `spec.sources`, `spec.destination`, `sp
 
 ## 6. Helm values files
 
-- Location: `helm/external-values/<env>/`. Environments are `local` and `prod`. Do not place values files directly in `helm/external-values/`.
+- Location: `helm/external-values/<env>/<area>/`, where `<area>` matches the Application's directory under `argocd/<env>/` (`local/infra/`, `local/games-orchestrator/`). Environments are `local` and `prod`. Do not place values files directly in `helm/external-values/`. Values files still directly under `helm/external-values/<env>/` predate this rule and SHOULD move when next touched.
 - Name: `<app>-<env>.yaml`, where `<app>` is the same name as the Application file (`agones-local.yaml`, `open-match-prod.yaml`). Do not use `.values.yaml` or `.yml`, and do not omit the environment suffix.
 - One values file per Application. Do not share a file between Applications or between charts, even when two Keycloak charts look alike; give each chart its own file (`keycloak-bitnami-local.yaml`).
 - Contain only overrides of chart defaults. Do not copy the entire default `values.yaml`.
