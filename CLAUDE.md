@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Infrastructure/GitOps config for a multiplayer game backend demo built on **Agones** (dedicated game server hosting) and **Open Match** (matchmaking), deployed to Kubernetes via **ArgoCD**. There is no application source code, build, or test suite: the repo is YAML manifests, Helm values, and shell scripts. The GitOps manifests use `git@github.com:CouchPartyGames/MultiplayerGamesService.git`.
+Infrastructure/GitOps config for a multiplayer game backend demo built on **Agones** (dedicated game server hosting) and **Open Match** (matchmaking), deployed to Kubernetes via **ArgoCD**. There is no application source code, build, or test suite: the repo is YAML manifests, Helm values, and shell scripts. The GitOps manifests use `git@github.com:CouchPartyGames/MultiplayerGameService.git`.
 
 ## Layout and how the pieces connect
 
