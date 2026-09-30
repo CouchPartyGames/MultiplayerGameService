@@ -64,6 +64,38 @@ delivered.
 These definitions configure the local environment. Their pinned versions have
 not been verified together in a running cluster.
 
+## Troubleshooting
+
+### `kargo-api` pod stuck in `CreateContainerConfigError`
+
+Nothing in this repository creates the `kargo-api` Secret (bootstrap step 2), so
+a fresh install leaves the `kargo-api` pod in `CreateContainerConfigError`. The
+pod's events show `Error: secret "kargo-api" not found`:
+
+```bash
+kubectl -n kargo describe pod -l app.kubernetes.io/component=api
+```
+
+The `kargo-api-cert` secret is created separately by cert-manager, so seeing it
+in `kubectl -n kargo get secrets` does not mean `kargo-api` exists.
+
+For a local demo, create the Secret by hand. It needs the two keys that
+[kargo-local.yaml](../../../helm/external-values/local/infra/kargo-local.yaml) names:
+
+```bash
+kubectl -n kargo create secret generic kargo-api \
+  --from-literal=ADMIN_ACCOUNT_PASSWORD_HASH="$(htpasswd -bnBC 10 "" '<admin-password>' | tr -d ':\n')" \
+  --from-literal=ADMIN_ACCOUNT_TOKEN_SIGNING_KEY="$(openssl rand -base64 29 | tr -d '=+/' | cut -c1-32)"
+```
+
+- `<admin-password>` is the password you will use to sign in to Kargo as `admin`.
+  The hash must be bcrypt. `htpasswd` is in the `apache2-utils` package on Debian
+  and Ubuntu.
+- The kubelet retries on its own, so the pod should become `Running` within a
+  minute. If it does not, delete the pod and let the Deployment recreate it.
+- The Secret is not part of the ArgoCD Application, so `prune: true` leaves it in
+  place. Replace it with a SOPS-encrypted manifest once secret management is set up.
+
 ## Validation
 
 Render the charts with their pinned versions before changing chart settings:
