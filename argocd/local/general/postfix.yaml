@@ -13,7 +13,7 @@ spec:
   project: default
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo.git
+  - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     targetRevision: main 
     ref: myRepo
   - repoURL: https://bokysan.github.io/docker-postfix/

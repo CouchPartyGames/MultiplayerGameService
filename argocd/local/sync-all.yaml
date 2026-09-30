@@ -11,7 +11,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     path: argocd/local/infra
     targetRevision: HEAD
 
@@ -41,7 +41,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     path: argocd/local/dedicated-games
     targetRevision: HEAD
 
@@ -70,7 +70,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     path: argocd/local/dedicated-hosting
     targetRevision: HEAD
 
@@ -99,7 +99,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     path: argocd/local/dedicated-hosting
     targetRevision: HEAD
 
@@ -129,7 +129,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo
+    repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     path: argocd/local/container-registry
     targetRevision: HEAD
 

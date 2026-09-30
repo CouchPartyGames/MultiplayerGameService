@@ -14,7 +14,7 @@ spec:
   project: authentication
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/multiplayer-service-demo.git
+  - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
     targetRevision: main 
     ref: myRepo
   - repoURL: oci://registry-1.docker.io/bitnamicharts/keycloak
