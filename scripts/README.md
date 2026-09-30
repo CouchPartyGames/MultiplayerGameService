@@ -13,7 +13,9 @@ Run these commands from the repository root. Cluster bootstrap requires Helm, th
 | `k3s-install-linux.sh` | Install k3s on Linux with the official installer (kubeconfig at `/etc/rancher/k3s/k3s.yaml`). |
 | `k3s-install-mac.sh` | k3s is Linux-only, so install k3d (k3s in Docker) on macOS and create a `k3s-local` cluster. |
 | `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, then install ArgoCD in the `argocd` namespace. |
-| `versions.sh` | Set the default ArgoCD chart, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
+| `argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
+| `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS, using Homebrew when available; version set by `ARGOCD_CLI_VERSION`. |
+| `versions.sh` | Set the default ArgoCD chart, ArgoCD CLI, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
 
 ## Local bootstrap
 

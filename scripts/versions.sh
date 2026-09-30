@@ -5,3 +5,4 @@
 : "${K3S_VERSION:=}" # empty = stable channel, e.g. v1.31.4+k3s1
 : "${MINIKUBE_VERSION:=latest}"
 : "${MINIKUBE_DRIVER:=docker}"
+: "${ARGOCD_CLI_VERSION:=latest}" # e.g. v2.13.0

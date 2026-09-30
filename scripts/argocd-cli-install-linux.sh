@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Installs the ArgoCD CLI on Linux from the official GitHub release.
-# Usage: ./argocd-cli-install-linux.sh [version]   (default: latest, e.g. v2.13.0)
+# Override the version with ARGOCD_CLI_VERSION=vX.Y.Z (default set in versions.sh).
 set -euo pipefail
 
-VERSION="${1:-latest}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
+VERSION="$ARGOCD_CLI_VERSION"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 case "$(uname -m)" in

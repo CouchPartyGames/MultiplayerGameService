@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Installs the ArgoCD CLI on macOS. Uses Homebrew when available, otherwise
 # downloads the official GitHub release binary.
-# Usage: ./argocd-cli-mac.sh [version]   (default: latest; version only applies to the binary download)
+# Override the version with ARGOCD_CLI_VERSION=vX.Y.Z (default set in versions.sh).
 set -euo pipefail
 
-VERSION="${1:-latest}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
+VERSION="$ARGOCD_CLI_VERSION"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 if command -v brew >/dev/null 2>&1 && [ "$VERSION" = "latest" ]; then
