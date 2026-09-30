@@ -19,7 +19,7 @@ spec:
     - https://argoproj.github.io/argo-helm
     - https://charts.jetstack.io
     - ghcr.io/akuity/kargo-charts
-    - git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    - git@github.com:CouchPartyGames/MultiplayerGameService.git
 
   destinations:
     - namespace: cert-manager

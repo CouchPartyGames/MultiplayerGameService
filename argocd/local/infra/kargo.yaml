@@ -11,7 +11,7 @@ spec:
   project: infra
 
   sources:
-    - repoURL: git@github.com:CouchPartyGames/MultiplayerGamesService.git
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
       targetRevision: main
       ref: myRepo
     - chart: kargo
