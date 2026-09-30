@@ -1,6 +1,6 @@
 # Scripts
 
-Run these commands from the repository root. Cluster bootstrap requires a working Docker-compatible container runtime, Helm, and the matching cluster CLI (`kind` or `minikube`). The installer scripts download that CLI if it is missing; `kubectl` is needed to register the ArgoCD applications afterward.
+Run these commands from the repository root. Cluster bootstrap requires Helm, the matching cluster CLI (`kind` or `minikube`), and a working container runtime or VM driver. Minikube uses Docker by default; configure another driver with `MINIKUBE_DRIVER`. The installer scripts download that CLI if it is missing; `kubectl` is needed to register the ArgoCD applications afterward.
 
 | Script | Purpose |
 | --- | --- |
@@ -9,8 +9,8 @@ Run these commands from the repository root. Cluster bootstrap requires a workin
 | `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster and install ArgoCD.  |
 | `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). |
 | `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. |
-| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with the Docker driver, 8 CPUs, and 12 GB of memory, then install ArgoCD. |
-| `versions.sh` | Set the default ArgoCD chart, kind, and minikube versions for the other scripts. |
+| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, then install ArgoCD. |
+| `versions.sh` | Set the default ArgoCD chart, kind, and minikube versions and the minikube driver for the other scripts. |
 
 ## Local bootstrap
 
@@ -50,7 +50,7 @@ Follow [Local bootstrap](#local-bootstrap) for the initial cluster and ArgoCD se
 | --- | --- |
 | List local profiles | `minikube profile list` |
 | Check cluster status | `minikube status --profile multiplayer-demo` |
-| Start or resume the cluster | `minikube start --profile multiplayer-demo --driver docker --memory 12288 --cpus 8` |
+| Start or resume the cluster | `minikube start --profile multiplayer-demo --driver "${MINIKUBE_DRIVER:-docker}" --memory 12288 --cpus 8` |
 | Stop the cluster, keeping its data | `minikube stop --profile multiplayer-demo` |
 | List pods across namespaces | `kubectl --context multiplayer-demo get pods -A` |
 | Open the Kubernetes dashboard | `minikube dashboard --profile multiplayer-demo` |
@@ -65,8 +65,47 @@ Replace `<service-name>` and `<namespace>` with your service's values. Keep `min
 
 See the [official minikube guide](https://minikube.sigs.k8s.io/docs/start/) for more examples.
 
+## Kind quickstart
+
+If kind is missing, run the installer for your platform:
+
+```bash
+./scripts/kind-install-linux.sh  # Linux
+# Or, on Apple Silicon macOS:
+./scripts/kind-install-mac.sh
+```
+
+Follow the kind commands in [Local bootstrap](#local-bootstrap) for the initial cluster and ArgoCD setup. The cluster name is `multiplayer-demo`; its Kubernetes context is `kind-multiplayer-demo`.
+
+| Task | Command |
+| --- | --- |
+| Show the installed version | `kind version` |
+| List local clusters | `kind get clusters` |
+| Create a cluster and wait for readiness | `kind create cluster --name multiplayer-demo --wait 5m` |
+| List cluster node containers | `kind get nodes --name multiplayer-demo` |
+| Check cluster connectivity | `kubectl --context kind-multiplayer-demo cluster-info` |
+| Check node readiness | `kubectl --context kind-multiplayer-demo get nodes` |
+| List pods across namespaces | `kubectl --context kind-multiplayer-demo get pods -A` |
+| Load a local Docker image | `kind load docker-image <image>:<tag> --name multiplayer-demo` |
+| Load an image archive | `kind load image-archive <archive.tar> --name multiplayer-demo` |
+| Export cluster logs | `kind export logs ./kind-logs --name multiplayer-demo` |
+| Delete the cluster and its data | `kind delete cluster --name multiplayer-demo` |
+
+Run the create command only when the cluster does not already exist. Replace the image and archive placeholders with your local values. For loaded images, use a non-`latest` tag and set the workload's `imagePullPolicy` to `IfNotPresent` or `Never` so Kubernetes uses the local image.
+
+See the [official kind quick start](https://kind.sigs.k8s.io/docs/user/quick-start/) for more examples.
+
 ## Version and install options
 
 The defaults in `scripts/versions.sh` are ArgoCD chart v5.24.1, kind v0.27.0, and the latest minikube release. Override them through `ARGO_CD_CHART_VERSION`, `KIND_VERSION`, or `MINIKUBE_VERSION` in the command environment.
+
+`MINIKUBE_DRIVER` also defaults to `docker` in `scripts/versions.sh`. Set it before bootstrapping to use another driver that is installed and configured on your machine. For example, to use Podman for bootstrap and subsequent quickstart commands in the same shell:
+
+```bash
+export MINIKUBE_DRIVER=podman
+./scripts/minikube-bootstrap.sh
+```
+
+Use the same driver when starting an existing profile.
 
 The Linux installers also accept `INSTALL_DIR` (default `/usr/local/bin`). The macOS installers accept `INSTALL_DIR` and a version override only when Homebrew is unavailable; the Homebrew path uses the package manager's version and location. Binary installation may use `sudo` when the destination is not writable.
