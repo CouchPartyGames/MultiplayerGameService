@@ -1,0 +1,16 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "eastus"
+cluster_name    = "multiplayer-demo"
+
+# Replace with your workstation or VPN's public IPv4 address/range.
+admin_cidrs = ["203.0.113.10/32"]
+# Replace with an existing Microsoft Entra group containing cluster administrators.
+admin_group_object_ids = ["00000000-0000-0000-0000-000000000000"]
+
+node_count   = 3
+vm_size      = "Standard_D4s_v5"
+disk_size_gb = 64
+sku_tier     = "Free"
+
+# Optional; confirm region and VM size support before enabling.
+availability_zones = []

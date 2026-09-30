@@ -1,6 +1,6 @@
 # Terraform
 
-This directory contains Terraform installation scripts and a GCP configuration for a GKE cluster. Run the commands below from the repository root.
+This directory contains Terraform installation scripts and separate GCP/GKE and Azure/AKS configurations. Run the commands below from the repository root.
 
 ## Install Terraform
 
@@ -38,3 +38,15 @@ terraform -chdir=terraform/gcp plan
 ```
 
 Review the plan and estimated GCP costs before applying it. The cluster has deletion protection enabled by default.
+
+## Azure configuration
+
+`azure/` defines a virtual network, subnet, managed cluster identity, and AKS cluster. It requires Terraform 1.5 through 1.x and AzureRM provider 4.x. See the [Azure setup](azure/README.md) for permissions, networking defaults, and deployment instructions.
+
+```bash
+az login
+cp terraform/azure/terraform.tfvars.example terraform/azure/terraform.tfvars
+# Edit subscription_id, admin_cidrs, and admin_group_object_ids.
+terraform -chdir=terraform/azure init
+terraform -chdir=terraform/azure plan
+```
