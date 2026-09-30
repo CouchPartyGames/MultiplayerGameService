@@ -1,20 +1,20 @@
 # Scripts
 
-Run these commands from the repository root. Cluster bootstrap requires Helm, the matching cluster CLI (`kind` or `minikube`), and a working container runtime or VM driver. Minikube uses Docker by default; configure another driver with `MINIKUBE_DRIVER`. The installer scripts download that CLI if it is missing; `kubectl` is needed to register the ArgoCD applications afterward.
+Run these commands from the repository root. The bootstrap scripts need Helm, `kubectl`, and a working container runtime or VM driver. The kind and minikube bootstrap scripts also need their cluster CLI on `PATH` and exit if it is missing; install it with the matching installer script first. Only `k3s-bootstrap.sh` installs its cluster tool itself. Minikube uses Docker by default; configure another driver with `MINIKUBE_DRIVER`.
 
 | Script | Purpose |
 | --- | --- |
-| `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64). |
+| `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64), replacing any existing binary. |
 | `kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. |
-| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster and install ArgoCD.  |
-| `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). |
-| `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. |
-| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, then install ArgoCD. |
+| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster, install ArgoCD, and print the admin password. See [Local bootstrap](#local-bootstrap) for a known issue. |
+| `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). Exits if minikube is already installed. |
+| `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. Exits if minikube is already installed. |
+| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, install ArgoCD, and print the admin password. |
 | `k3s-install-linux.sh` | Install k3s on Linux with the official installer (kubeconfig at `/etc/rancher/k3s/k3s.yaml`). |
 | `k3s-install-mac.sh` | k3s is Linux-only, so install k3d (k3s in Docker) on macOS and create a `k3s-local` cluster. |
-| `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, then install ArgoCD in the `argocd` namespace. |
+| `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, install ArgoCD in the `argocd` namespace, and print the admin password. |
 | `argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
-| `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS, using Homebrew when available; version set by `ARGOCD_CLI_VERSION`. |
+| `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
 | `versions.sh` | Set the default ArgoCD chart, ArgoCD CLI, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
 
 ## Local bootstrap
@@ -23,21 +23,27 @@ For minikube, install the CLI if needed, then run:
 
 ```bash
 ./scripts/minikube-bootstrap.sh
-kubectl apply -f argocd/local/sync-all.yaml
+kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
 
-The bootstrap script installs ArgoCD chart v5.24.1 in the `argocd` namespace using the `multiplayer-demo` Kubernetes context. The application manifests in `argocd/local/sync-all.yaml` track `main`, so local repository edits reach the cluster only after they are pushed.
+The bootstrap script installs ArgoCD chart v10.9.5 (ArgoCD v3.5.3) as release `argo-cd` in the `argocd` namespace, using the `multiplayer-demo` Kubernetes context. It fails if the chart install does not become ready.
+
+`argocd/local/sync-all-groups.yaml` registers three parent Applications in the `default` project: `infra-local`, `games-local`, and `games-orchestrator-local`. They read `argocd/local/infra`, `argocd/local/games`, and `argocd/local/games-orchestrator` from the repository's `HEAD` (`main`), so local edits reach the cluster only after they are pushed. `argocd/local/match-making` and `argocd/local/general` are not registered. The parents pull this repository over SSH and stay in `ComparisonError` until you [add the Git repository](#add-the-git-repository) to ArgoCD.
+
+`kind-bootstrap.sh` passes `--kube-context multiplayer-demo` to Helm, but kind names the context `kind-multiplayer-demo`. The Helm install fails, or targets a minikube profile with that name if one exists. Until the script is fixed, run the equivalent commands directly:
 
 ```bash
 kind create cluster --name multiplayer-demo
 helm upgrade --install argo-cd argo-cd \
   --repo https://argoproj.github.io/argo-helm \
   --kube-context kind-multiplayer-demo \
-  --version 5.24.1 \
+  --version 10.9.5 \
   --namespace argocd --create-namespace \
   --wait
-kubectl --context kind-multiplayer-demo apply -f argocd/local/sync-all.yaml
+kubectl --context kind-multiplayer-demo apply -f argocd/local/sync-all-groups.yaml
 ```
+
+`kind create cluster` fails if the cluster already exists, in `kind-bootstrap.sh` as well.
 
 ## Minikube quickstart
 
@@ -106,8 +112,10 @@ k3s runs natively only on Linux. On macOS the scripts use k3d, which runs k3s in
 
 ```bash
 ./scripts/k3s-bootstrap.sh
-kubectl apply -f argocd/local/sync-all.yaml
+kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
+
+On Linux, run `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` before the `kubectl apply` if your kubeconfig does not already point at k3s. On macOS the installer switches the current context to `k3d-k3s-local`.
 
 To install without ArgoCD, run `./scripts/k3s-install-linux.sh` (Linux) or `./scripts/k3s-install-mac.sh` (macOS) directly. Both are safe to re-run.
 
@@ -125,9 +133,20 @@ See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for mor
 
 ## Version and install options
 
-The defaults in `scripts/versions.sh` are ArgoCD chart v5.24.1, kind v0.27.0, the latest minikube release, and the k3s stable channel. Override them through `ARGO_CD_CHART_VERSION`, `KIND_VERSION`, `MINIKUBE_VERSION`, or `K3S_VERSION` in the command environment.
+`scripts/versions.sh` sets these defaults. Override any of them in the command environment:
 
-`MINIKUBE_DRIVER` also defaults to `docker` in `scripts/versions.sh`. Set it before bootstrapping to use another driver that is installed and configured on your machine. For example, to use Podman for bootstrap and subsequent quickstart commands in the same shell:
+| Variable | Default | Used by |
+| --- | --- | --- |
+| `ARGO_CD_CHART_VERSION` | `10.9.5` (ArgoCD v3.5.3) | All bootstrap scripts |
+| `ARGOCD_CLI_VERSION` | `latest` | ArgoCD CLI installers |
+| `KIND_VERSION` | `v0.27.0` | kind installers |
+| `MINIKUBE_VERSION` | `latest` | minikube installers |
+| `MINIKUBE_DRIVER` | `docker` | `minikube-bootstrap.sh` |
+| `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | k3s installers |
+
+The chart version in `versions.sh` matches `argocd/local/infra/argo-cd.yaml`, which manages ArgoCD after the `infra-local` Application syncs. Change both together.
+
+Set `MINIKUBE_DRIVER` before bootstrapping to use another driver that is installed and configured on your machine. For example, to use Podman for bootstrap and subsequent quickstart commands in the same shell:
 
 ```bash
 export MINIKUBE_DRIVER=podman
@@ -136,11 +155,11 @@ export MINIKUBE_DRIVER=podman
 
 Use the same driver when starting an existing profile.
 
-The Linux installers also accept `INSTALL_DIR` (default `/usr/local/bin`). The macOS installers accept `INSTALL_DIR` and a version override only when Homebrew is unavailable; the Homebrew path uses the package manager's version and location. Binary installation may use `sudo` when the destination is not writable.
+The kind, minikube, and ArgoCD CLI installers accept `INSTALL_DIR` (default `/usr/local/bin`) and use `sudo` when it is not writable. On macOS, the kind and minikube installers use `INSTALL_DIR` and the version override only when Homebrew is unavailable; the Homebrew path uses the package manager's version and location. The macOS ArgoCD CLI installer skips Homebrew whenever `ARGOCD_CLI_VERSION` is pinned.
 
 ## ArgoCD Local Quickstart
 
-Reach the ArgoCD API server of the local cluster with a port-forward, then use the `argocd` CLI or the web UI. Install the CLI with `./scripts/argocd-cli-install-linux.sh` or `./scripts/argocd-cli-install-mac.sh`. Use a CLI version that matches the server, because a large version gap can make the login fail. Check both with `argocd version`.
+Reach the ArgoCD API server of the local cluster with a port-forward, then use the `argocd` CLI or the web UI. Install the CLI with `./scripts/argocd-cli-install-linux.sh` or `./scripts/argocd-cli-install-mac.sh`. Use a CLI version that matches the server, because a large version gap can make the login fail. The default chart runs ArgoCD v3.5.3, so pin the CLI with `ARGOCD_CLI_VERSION=v3.5.3` if `latest` has moved ahead. Check both with `argocd version`.
 
 ### Connect
 
@@ -150,7 +169,7 @@ Keep the port-forward running in its own terminal. `--address 127.0.0.1,::1` bin
 kubectl port-forward --address 127.0.0.1,::1 svc/argo-cd-argocd-server -n argocd 4444:443
 ```
 
-In a second terminal, read the initial admin password and log in. `argocd login` takes `host:port`, not a URL. `--insecure` is needed because the local server uses a self-signed certificate, and `--grpc-web` avoids gRPC hangs through `kubectl port-forward`:
+In a second terminal, read the initial admin password and log in. The bootstrap scripts also print this password. `argocd login` takes `host:port`, not a URL. `--insecure` is needed because the local server uses a self-signed certificate, and `--grpc-web` avoids gRPC hangs through `kubectl port-forward`:
 
 ```bash
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret \
