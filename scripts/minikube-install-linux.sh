@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+if command -v minikube >/dev/null 2>&1; then
+  echo "minikube is already installed."
+  exit 0
+fi
+
 # Installs minikube on Linux. Override with MINIKUBE_VERSION=vX.Y.Z (default: latest)
 source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
@@ -11,9 +16,6 @@ case "$(uname -m)" in
   *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
 
-if ! command -v docker >/dev/null 2>&1; then
-  echo "Warning: docker not found. scripts/minikube.sh uses --driver docker." >&2
-fi
 
 if [ "$MINIKUBE_VERSION" = "latest" ]; then
   URL="https://storage.googleapis.com/minikube/releases/latest/minikube-linux-${ARCH}"
@@ -32,4 +34,5 @@ else
   sudo install -m 0755 "$TMP" "$INSTALL_DIR/minikube"
 fi
 
+whereis minikube
 minikube version

@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+if command -v minikube >/dev/null 2>&1; then
+  echo "minikube is already installed."
+  exit 0
+fi
+
 # Installs minikube on macOS Apple Silicon (arm64).
 # Override with MINIKUBE_VERSION=vX.Y.Z (only used for the binary fallback, default: latest).
 source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
