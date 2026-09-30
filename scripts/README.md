@@ -137,3 +137,56 @@ export MINIKUBE_DRIVER=podman
 Use the same driver when starting an existing profile.
 
 The Linux installers also accept `INSTALL_DIR` (default `/usr/local/bin`). The macOS installers accept `INSTALL_DIR` and a version override only when Homebrew is unavailable; the Homebrew path uses the package manager's version and location. Binary installation may use `sudo` when the destination is not writable.
+
+## ArgoCD Local Quickstart
+
+Reach the ArgoCD API server of the local cluster with a port-forward, then use the `argocd` CLI or the web UI. Install the CLI with `./scripts/argocd-cli-install-linux.sh` or `./scripts/argocd-cli-install-mac.sh`. Use a CLI version that matches the server, because a large version gap can make the login fail. Check both with `argocd version`.
+
+### Connect
+
+Keep the port-forward running in its own terminal. `--address 127.0.0.1,::1` binds IPv4 and IPv6, so `localhost` works whichever one it resolves to:
+
+```bash
+kubectl port-forward --address 127.0.0.1,::1 svc/argo-cd-argocd-server -n argocd 4444:443
+```
+
+In a second terminal, read the initial admin password and log in. `argocd login` takes `host:port`, not a URL. `--insecure` is needed because the local server uses a self-signed certificate, and `--grpc-web` avoids gRPC hangs through `kubectl port-forward`:
+
+```bash
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath='{.data.password}' | base64 -d)
+argocd login 127.0.0.1:4444 --insecure --grpc-web --username admin --password "$ARGOCD_PASSWORD"
+```
+
+The web UI is at <https://localhost:4444>; sign in as `admin` with the same password and accept the certificate warning. Change the password with `argocd account update-password`.
+
+### Add the Git repository
+
+The manifests pull this repository over SSH (`git@github.com:CouchPartyGames/MultiplayerGameService.git`), so ArgoCD needs a key that can read it. A read-only deploy key is best:
+
+```bash
+argocd repo add git@github.com:CouchPartyGames/MultiplayerGameService.git \
+  --ssh-private-key-path ~/.ssh/<key> --insecure-ignore-host-key
+argocd repo list
+```
+
+`--insecure-ignore-host-key` is acceptable for a local demo only. Without a registered repo, apps show `ComparisonError: SSH agent requested but SSH_AUTH_SOCK not-specified`, and `repository not found` means the URL is misspelled or the key has no access.
+
+### Projects and applications
+
+| Task | Command |
+| --- | --- |
+| List projects | `argocd proj list` |
+| Show one project | `argocd proj get <project>` |
+| List applications | `argocd app list` |
+| Show an application and its conditions | `argocd app get argocd/<app>` |
+| Re-read Git, ignoring the cache | `argocd app get argocd/<app> --hard-refresh` |
+| Sync an application | `argocd app sync argocd/<app>` |
+| Show a diff against Git | `argocd app diff argocd/<app>` |
+| Stream application logs | `argocd app logs argocd/<app>` |
+| List registered clusters | `argocd cluster list` |
+| Show the logged-in context | `argocd context` |
+
+Replace `<project>` and `<app>` with names from the list commands. The same information is available without logging in to the API through `kubectl -n argocd get applications,appprojects`. Repository edits reach the cluster only after they are pushed to `main`.
+
+To skip the API server altogether, `argocd --core <command>` talks to the cluster through your kubeconfig. It needs no port-forward or password, but the current namespace must be `argocd` (`kubectl config set-context --current --namespace=argocd`).
