@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Installs minikube on Linux. Override with MINIKUBE_VERSION=vX.Y.Z (default: latest)
-MINIKUBE_VERSION="${MINIKUBE_VERSION:-latest}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 case "$(uname -m)" in

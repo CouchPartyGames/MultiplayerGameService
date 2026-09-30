@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installs minikube on macOS Apple Silicon (arm64).
 # Override with MINIKUBE_VERSION=vX.Y.Z (only used for the binary fallback, default: latest).
-MINIKUBE_VERSION="${MINIKUBE_VERSION:-latest}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 if [ "$(uname -s)" != "Darwin" ] || [ "$(uname -m)" != "arm64" ]; then

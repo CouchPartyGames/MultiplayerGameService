@@ -27,7 +27,7 @@ Then register the local ArgoCD applications:
 kubectl apply -f argocd/local/sync-all.yaml
 ```
 
-The Linux installers accept `INSTALL_DIR` and `KIND_VERSION` or `MINIKUBE_VERSION` overrides. The macOS installers accept the same overrides for their binary download path; Homebrew installs ignore them. The installers may use `sudo` when the destination is not writable.
+Default ArgoCD chart, kind, and minikube versions are set in `scripts/versions.sh`. The Linux installers accept `INSTALL_DIR` and `KIND_VERSION` or `MINIKUBE_VERSION` overrides. The macOS installers accept the same overrides for their binary download path; Homebrew installs ignore them. The installers may use `sudo` when the destination is not writable.
 
 **Manual install notes:** `install-argocd.sh` uses the current Kubernetes context and configures a hard-coded admin password, so avoid it for a shared cluster. `install-observability.sh` has a broken line continuation in its Prometheus command and does not add the Helm repositories it references; it needs correction before use.
 

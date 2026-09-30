@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
+
 if ! command -v minikube >/dev/null 2>&1; then
   echo "Error: minikube is not installed or is not on PATH." >&2
   exit 1
@@ -12,13 +14,14 @@ if ! command -v helm >/dev/null 2>&1; then
 fi
 
 PROFILE="multiplayer-demo"
-ARGO_CD_CHART_VERSION="5.24.1"
 
-minikube start --profile "$PROFILE" --driver docker --memory 12288 --cpus 8
+if ! minikube start --profile "$PROFILE" --driver docker --memory 12288 --cpus 8; then
+  echo "Error: failed to create minikube cluster '$PROFILE'." >&2
+  exit 1
+fi
 
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update argo
-helm upgrade --install argo-cd argo/argo-cd \
+helm upgrade --install argo-cd argo-cd \
+  --repo https://argoproj.github.io/argo-helm \
   --kube-context "$PROFILE" \
   --version "$ARGO_CD_CHART_VERSION" \
   --namespace argocd --create-namespace \

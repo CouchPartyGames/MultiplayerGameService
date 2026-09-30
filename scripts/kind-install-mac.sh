@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Installs kind (Kubernetes IN Docker) on macOS Apple Silicon (arm64).
 # Override with KIND_VERSION=vX.Y.Z (only used for the binary fallback).
-KIND_VERSION="${KIND_VERSION:-v0.27.0}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 if [ "$(uname -s)" != "Darwin" ] || [ "$(uname -m)" != "arm64" ]; then

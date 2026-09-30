@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
+
 if ! command -v kind >/dev/null 2>&1; then
   echo "Error: kind is not installed or is not on PATH." >&2
   exit 1
@@ -12,14 +14,16 @@ if ! command -v helm >/dev/null 2>&1; then
 fi
 
 CLUSTER="multiplayer-demo"
-ARGO_CD_CHART_VERSION="5.24.1"
 
-kind create cluster --name "$CLUSTER"
+echo "Starting kind cluster '$CLUSTER'..."
+if ! kind create cluster --name "$CLUSTER"; then
+  echo "Error: failed to create kind cluster '$CLUSTER'." >&2
+  exit 1
+fi
 
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update argo
-helm upgrade --install argo-cd argo/argo-cd \
-  --kube-context "kind-$CLUSTER" \
+helm upgrade --install argo-cd argo-cd \
+  --repo https://argoproj.github.io/argo-helm \
+  --kube-context "$PROFILE" \
   --version "$ARGO_CD_CHART_VERSION" \
   --namespace argocd --create-namespace \
   --wait

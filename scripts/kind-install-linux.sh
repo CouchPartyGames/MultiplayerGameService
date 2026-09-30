@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Installs kind (Kubernetes IN Docker) on Linux. Override with KIND_VERSION=vX.Y.Z
-KIND_VERSION="${KIND_VERSION:-v0.27.0}"
+source "$(dirname "${BASH_SOURCE[0]}")/versions.sh"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 case "$(uname -m)" in
