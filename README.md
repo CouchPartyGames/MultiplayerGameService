@@ -27,7 +27,8 @@ argocd/
 helm/external-values/   Helm values files referenced by the ArgoCD apps
 scripts/          Cluster bootstrap and manual Helm install scripts
 docker/           Custom Keycloak image (themes and SPIs)
-terraform/        Infrastructure as code (in progress)
+terraform/gcp/    Terraform for a GCP VPC, subnet, and GKE Standard cluster
+terraform/azure/  Terraform for an Azure virtual network, subnet, and AKS cluster
 ```
 
 Every folder under `argocd/local/` defines its own ArgoCD `AppProject`. Most apps have two sources: the upstream Helm chart, and this repository, referenced as `$myRepo`, which provides the values files from `helm/external-values/`.
@@ -80,7 +81,7 @@ To install components without ArgoCD, use `scripts/install-agones.sh`, `scripts/
 
 ## Status
 
-This is a work-in-progress demo. The local environment is the most complete. Production (GKE) and the Terraform setup are still being built.
+This is a work-in-progress demo. The local environment is the most complete. To create cloud infrastructure, follow the [GCP/GKE setup](terraform/gcp/README.md) or the [Azure/AKS setup](terraform/azure/README.md). The production ArgoCD manifests are still skeletons.
 
 ## License
 
