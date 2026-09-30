@@ -23,7 +23,7 @@ fi
 
 helm upgrade --install argo-cd argo-cd \
   --repo https://argoproj.github.io/argo-helm \
-  --kube-context "$PROFILE" \
+  --kube-context "$CLUSTER" \
   --version "$ARGO_CD_CHART_VERSION" \
   --namespace argocd --create-namespace \
   --wait

@@ -1,53 +1,41 @@
 # Scripts
 
-Run these commands from the repository root. The bootstrap scripts need a working container runtime, `helm`, and the matching Kubernetes CLI (`kind` or `minikube`). Use the install script for your operating system first if that CLI is missing.
+Run these commands from the repository root. Cluster bootstrap requires a working Docker-compatible container runtime, Helm, and the matching cluster CLI (`kind` or `minikube`). The installer scripts download that CLI if it is missing; `kubectl` is needed to register the ArgoCD applications afterward.
 
 | Script | Purpose |
 | --- | --- |
-| `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64). Defaults to v0.27.0. |
-| `kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. Defaults to v0.27.0 for the binary download. |
-| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster and install ArgoCD chart v5.24.1. |
-| `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). Defaults to the latest release. |
-| `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. Defaults to the latest release for the binary download. |
-| `minikube-bootstrap.sh` | Create the `multiplayer-demo` minikube profile with the Docker driver, 8 CPUs, and 12 GB of memory, then install ArgoCD chart v5.24.1. |
-| `install-argocd.sh` | Install ArgoCD chart v5.8.5 in the current Kubernetes context and set a fixed admin password. |
-| `install-observability.sh` | Attempt to install Prometheus, Prometheus Operator CRDs, Grafana, and Loki in the current Kubernetes context. See the note below. |
+| `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64). |
+| `kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. |
+| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster and install ArgoCD.  |
+| `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). |
+| `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. |
+| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with the Docker driver, 8 CPUs, and 12 GB of memory, then install ArgoCD. |
+| `versions.sh` | Set the default ArgoCD chart, kind, and minikube versions for the other scripts. |
 
-For a local cluster, choose one bootstrap path:
+## Local bootstrap
+
+For minikube, install the CLI if needed, then run:
 
 ```bash
-./scripts/kind-bootstrap.sh
-# or
 ./scripts/minikube-bootstrap.sh
-```
-
-Then register the local ArgoCD applications:
-
-```bash
 kubectl apply -f argocd/local/sync-all.yaml
 ```
 
-Default ArgoCD chart, kind, and minikube versions are set in `scripts/versions.sh`. The Linux installers accept `INSTALL_DIR` and `KIND_VERSION` or `MINIKUBE_VERSION` overrides. The macOS installers accept the same overrides for their binary download path; Homebrew installs ignore them. The installers may use `sudo` when the destination is not writable.
+The bootstrap script installs ArgoCD chart v5.24.1 in the `argocd` namespace using the `multiplayer-demo` Kubernetes context. The application manifests in `argocd/local/sync-all.yaml` track `main`, so local repository edits reach the cluster only after they are pushed.
 
-**Manual install notes:** `install-argocd.sh` uses the current Kubernetes context and configures a hard-coded admin password, so avoid it for a shared cluster. `install-observability.sh` has a broken line continuation in its Prometheus command and does not add the Helm repositories it references; it needs correction before use.
-
-
-# ArgoCD Cleanup
-
-
-ArgoCD Cleanup
-
+```bash
+kind create cluster --name multiplayer-demo
+helm upgrade --install argo-cd argo-cd \
+  --repo https://argoproj.github.io/argo-helm \
+  --kube-context kind-multiplayer-demo \
+  --version 5.24.1 \
+  --namespace argocd --create-namespace \
+  --wait
+kubectl --context kind-multiplayer-demo apply -f argocd/local/sync-all.yaml
 ```
-        # Remove Initial Password
-kubectl delete secret argocd-initial-admin-secret -n argocd
 
-        # Annoying hack with time not set properly
-        # Setup password - https://www.browserling.com/tools/bcrypt
-        #
-        # 8w3iauj3DMh9ANM9aT
-kubectl -n argocd patch secret argocd-secret \
-  -p '{"stringData": {
-    "admin.password": "$2a$10$Nw0Uwlwv6Nv5KQSKZusrgu/ilPpgAls96ujh5/8LJQOb4FM5HgtzW",
-    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
-  }}'
-```
+## Version and install options
+
+The defaults in `scripts/versions.sh` are ArgoCD chart v5.24.1, kind v0.27.0, and the latest minikube release. Override them through `ARGO_CD_CHART_VERSION`, `KIND_VERSION`, or `MINIKUBE_VERSION` in the command environment.
+
+The Linux installers also accept `INSTALL_DIR` (default `/usr/local/bin`). The macOS installers accept `INSTALL_DIR` and a version override only when Homebrew is unavailable; the Homebrew path uses the package manager's version and location. Binary installation may use `sudo` when the destination is not writable.
