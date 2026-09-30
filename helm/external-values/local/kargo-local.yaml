@@ -1,0 +1,13 @@
+# cert-manager must be installed before syncing Kargo.
+api:
+  secret:
+    # Provision through SOPS + age in the kargo namespace with keys
+    # ADMIN_ACCOUNT_PASSWORD_HASH and ADMIN_ACCOUNT_TOKEN_SIGNING_KEY.
+    name: kargo-api
+
+controller:
+  argocd:
+    integrationEnabled: true
+    namespace: argocd
+  rollouts:
+    integrationEnabled: true
