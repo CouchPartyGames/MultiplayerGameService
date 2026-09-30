@@ -15,8 +15,6 @@ extraObjects:
       age.txt: QUdFLVNFQ1JFVC1LRVktMVJLV1NaUUhEU0VVWFNIRkpKN1NNMzg0RDlTMDA2VThOUFRZS1k4NzdDWTNQTjVMRlRNOFFYMEtQV00=
 
 global:
-  image:
-    tag: v2.6.0
   logging:
     format: json
 
