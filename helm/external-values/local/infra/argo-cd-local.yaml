@@ -1,18 +1,4 @@
-crds:
-  install: false
-
-extraObjects:
-  - kind: Secret
-    apiVersion: v1
-    metadata:
-      name: argocd-sops-age
-      namespace: argocd
-      labels:
-        argocd.argoproj.io/secret-type: repository
-      annotations:
-        managed-by: argocd.argoproj.io
-    data:
-      age.txt: QUdFLVNFQ1JFVC1LRVktMVJLV1NaUUhEU0VVWFNIRkpKN1NNMzg0RDlTMDA2VThOUFRZS1k4NzdDWTNQTjVMRlRNOFFYMEtQV00=
+# ArgoCD
 
 global:
   logging:
