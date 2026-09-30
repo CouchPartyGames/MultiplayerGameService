@@ -15,7 +15,7 @@ fi
 
 PROFILE="multiplayer-demo"
 
-if ! minikube start --profile "$PROFILE" --driver docker --memory 12288 --cpus 8; then
+if ! minikube start --profile "$PROFILE" --driver $MINIKUBE_DRIVER --memory 12288 --cpus 8; then
   echo "Error: failed to create minikube cluster '$PROFILE'." >&2
   exit 1
 fi
