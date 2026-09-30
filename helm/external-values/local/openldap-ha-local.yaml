@@ -1,9 +1,0 @@
-# https://github.com/jp-gouin/helm-openldap
-
-global:
-  adminPassword: admin
-  configPassword: config
-
-
-phpldapadmin:
-  enabled: true
