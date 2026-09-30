@@ -23,7 +23,7 @@ spec:
       chart: cert-manager
       helm:
         valueFiles:
-          - $myRepo/helm/external-values/local/cert-manager-local.yaml
+          - $myRepo/helm/external-values/local/infra/cert-manager-local.yaml
 
   destination:
     name: in-cluster

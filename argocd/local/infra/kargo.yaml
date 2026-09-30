@@ -19,7 +19,7 @@ spec:
       targetRevision: 1.11.5
       helm:
         valueFiles:
-          - $myRepo/helm/external-values/local/kargo-local.yaml
+          - $myRepo/helm/external-values/local/infra/kargo-local.yaml
 
   destination:
     name: in-cluster
