@@ -73,9 +73,8 @@ Run from the repository root with a working container runtime, Helm, kubectl, an
 
 ```bash
 ./scripts/minikube-bootstrap.sh
+# Or: ./scripts/kind-bootstrap.sh
 ```
-
-`kind-bootstrap.sh` currently passes the wrong Helm context; the [scripts README](../scripts/README.md#local-bootstrap) gives the equivalent manual commands for kind.
 
 1. Register this repository's SSH URL in ArgoCD, as described in the [scripts README](../scripts/README.md#add-the-git-repository).
 2. Provision the `kargo-api` Secret described in the [infrastructure README](local/infra/README.md#bootstrap-requirements).

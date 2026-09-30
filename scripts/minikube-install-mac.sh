@@ -17,7 +17,7 @@ if [ "$(uname -s)" != "Darwin" ] || [ "$(uname -m)" != "arm64" ]; then
 fi
 
 if ! command -v docker >/dev/null 2>&1; then
-  echo "Warning: docker not found. scripts/minikube.sh uses --driver docker (Docker Desktop, colima, or OrbStack)." >&2
+  echo "Warning: docker not found. scripts/minikube-bootstrap.sh uses --driver docker by default (Docker Desktop, colima, or OrbStack)." >&2
 fi
 
 if command -v brew >/dev/null 2>&1; then

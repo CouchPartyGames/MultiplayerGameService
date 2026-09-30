@@ -42,4 +42,4 @@ Validate manifest edits with `kubectl apply --dry-run=server -f <file>` against 
 
 ## Known inconsistencies
 
-Before assuming a manifest or script works as written, check the blocker lists: "Review notes" in `argocd/README.md` (duplicate Application names, missing values files, project permissions, manual Agones sync) and "Local bootstrap" in `scripts/README.md` (the `kind-bootstrap.sh` context bug). When you fix one, remove it from that list.
+Before assuming a manifest works as written, check the blocker list under "Review notes" in `argocd/README.md` (duplicate Application names, missing values files, project permissions, manual Agones sync). When you fix one, remove it from that list.

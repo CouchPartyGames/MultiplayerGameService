@@ -6,7 +6,7 @@ Run these commands from the repository root. The bootstrap scripts need Helm, `k
 | --- | --- |
 | `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64), replacing any existing binary. |
 | `kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. |
-| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster, install ArgoCD, and print the admin password. See [Local bootstrap](#local-bootstrap) for a known issue. |
+| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster, install ArgoCD, and print the admin password. |
 | `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). Exits if minikube is already installed. |
 | `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. Exits if minikube is already installed. |
 | `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, install ArgoCD, and print the admin password. |
@@ -29,7 +29,7 @@ Install, Run and setup ArgoCD, then run:
 kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
 
-The bootstrap script installs ArgoCD chart v10.9.5 (ArgoCD v3.5.3) as release `argo-cd` in the `argocd` namespace, using the `multiplayer-demo` Kubernetes context. It fails if the chart install does not become ready.
+The bootstrap script installs ArgoCD chart v10.9.5 (ArgoCD v3.5.3) as release `argo-cd` in the `argocd` namespace. The minikube script uses the `multiplayer-demo` context, the kind script `kind-multiplayer-demo`, and the k3s script the k3s kubeconfig on Linux or the `k3d-k3s-local` context on macOS. It fails if the chart install does not become ready.
 
 ## Minikube quickstart
 
@@ -41,7 +41,7 @@ Install minikube with the script for your platform (both exit if minikube is alr
 ./scripts/minikube-install-mac.sh
 ```
 
-Follow [Local bootstrap](#local-bootstrap) for the initial cluster and ArgoCD setup. These everyday commands target the same `multiplayer-demo` profile:
+Follow [Quickstart](#quickstart) for the initial cluster and ArgoCD setup. These everyday commands target the same `multiplayer-demo` profile:
 
 | Task | Command |
 | --- | --- |
@@ -72,7 +72,7 @@ If kind is missing, run the installer for your platform:
 ./scripts/kind-install-mac.sh
 ```
 
-Follow the kind commands in [Local bootstrap](#local-bootstrap) for the initial cluster and ArgoCD setup. The cluster name is `multiplayer-demo`; its Kubernetes context is `kind-multiplayer-demo`.
+Run `./scripts/kind-bootstrap.sh` for the initial cluster and ArgoCD setup, as in [Quickstart](#quickstart). The cluster name is `multiplayer-demo`; its Kubernetes context is `kind-multiplayer-demo`.
 
 | Task | Command |
 | --- | --- |
