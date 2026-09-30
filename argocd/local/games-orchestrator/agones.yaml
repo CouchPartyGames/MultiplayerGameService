@@ -16,10 +16,10 @@ spec:
     ref: myRepo
   - repoURL: https://agones.dev/chart/stable
     chart: agones
-    targetRevision: 1.38.0
+    targetRevision: 1.61.0
     helm:
       valueFiles:
-      - $myRepo/helm/external-values/local/agones-local.yaml
+      - $myRepo/helm/external-values/local/games-orchestrator/agones-local.yaml
 
   destination:
     name: in-cluster
