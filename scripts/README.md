@@ -17,33 +17,19 @@ Run these commands from the repository root. The bootstrap scripts need Helm, `k
 | `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
 | `versions.sh` | Set the default ArgoCD chart, ArgoCD CLI, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
 
-## Local bootstrap
+## Quickstart
 
-For minikube, install the CLI if needed, then run:
+Install, Run and setup ArgoCD, then run:
 
 ```bash
-./scripts/minikube-bootstrap.sh
+./scripts/{name}-install-{platform}.sh
+
+./scripts/{name}-bootstrap.sh
+
 kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
 
 The bootstrap script installs ArgoCD chart v10.9.5 (ArgoCD v3.5.3) as release `argo-cd` in the `argocd` namespace, using the `multiplayer-demo` Kubernetes context. It fails if the chart install does not become ready.
-
-`argocd/local/sync-all-groups.yaml` registers three parent Applications in the `default` project: `infra-local`, `games-local`, and `games-orchestrator-local`. They read `argocd/local/infra`, `argocd/local/games`, and `argocd/local/games-orchestrator` from the repository's `HEAD` (`main`), so local edits reach the cluster only after they are pushed. `argocd/local/match-making` and `argocd/local/general` are not registered. The parents pull this repository over SSH and stay in `ComparisonError` until you [add the Git repository](#add-the-git-repository) to ArgoCD.
-
-`kind-bootstrap.sh` passes `--kube-context multiplayer-demo` to Helm, but kind names the context `kind-multiplayer-demo`. The Helm install fails, or targets a minikube profile with that name if one exists. Until the script is fixed, run the equivalent commands directly:
-
-```bash
-kind create cluster --name multiplayer-demo
-helm upgrade --install argo-cd argo-cd \
-  --repo https://argoproj.github.io/argo-helm \
-  --kube-context kind-multiplayer-demo \
-  --version 10.9.5 \
-  --namespace argocd --create-namespace \
-  --wait
-kubectl --context kind-multiplayer-demo apply -f argocd/local/sync-all-groups.yaml
-```
-
-`kind create cluster` fails if the cluster already exists, in `kind-bootstrap.sh` as well.
 
 ## Minikube quickstart
 
