@@ -10,7 +10,10 @@ Run these commands from the repository root. Cluster bootstrap requires Helm, th
 | `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). |
 | `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. |
 | `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, then install ArgoCD. |
-| `versions.sh` | Set the default ArgoCD chart, kind, and minikube versions and the minikube driver for the other scripts. |
+| `k3s-install-linux.sh` | Install k3s on Linux with the official installer (kubeconfig at `/etc/rancher/k3s/k3s.yaml`). |
+| `k3s-install-mac.sh` | k3s is Linux-only, so install k3d (k3s in Docker) on macOS and create a `k3s-local` cluster. |
+| `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, then install ArgoCD in the `argocd` namespace. |
+| `versions.sh` | Set the default ArgoCD chart, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
 
 ## Local bootstrap
 
@@ -95,9 +98,32 @@ Run the create command only when the cluster does not already exist. Replace the
 
 See the [official kind quick start](https://kind.sigs.k8s.io/docs/user/quick-start/) for more examples.
 
+## K3s quickstart
+
+k3s runs natively only on Linux. On macOS the scripts use k3d, which runs k3s inside Docker (Docker Desktop, colima, or OrbStack). Bootstrap installs whatever is missing, then installs ArgoCD:
+
+```bash
+./scripts/k3s-bootstrap.sh
+kubectl apply -f argocd/local/sync-all.yaml
+```
+
+To install without ArgoCD, run `./scripts/k3s-install-linux.sh` (Linux) or `./scripts/k3s-install-mac.sh` (macOS) directly. Both are safe to re-run.
+
+| | Linux (k3s) | macOS (k3d) |
+| --- | --- | --- |
+| Kubeconfig | `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` | Context `k3d-k3s-local`, set by the installer |
+| Check nodes | `kubectl get nodes` | `kubectl --context k3d-k3s-local get nodes` |
+| Stop | `sudo systemctl stop k3s` | `k3d cluster stop k3s-local` |
+| Start | `sudo systemctl start k3s` | `k3d cluster start k3s-local` |
+| Uninstall | `/usr/local/bin/k3s-uninstall.sh` | `k3d cluster delete k3s-local` |
+
+Set `K3D_CLUSTER_NAME` to change the macOS cluster name; the context is then `k3d-<name>`. Use `INSTALL_K3S_EXEC` on Linux to pass server flags, such as `--disable traefik`; setting it replaces the default `--write-kubeconfig-mode 644`, so include that flag too if you want a kubeconfig readable without `sudo`.
+
+See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for more.
+
 ## Version and install options
 
-The defaults in `scripts/versions.sh` are ArgoCD chart v5.24.1, kind v0.27.0, and the latest minikube release. Override them through `ARGO_CD_CHART_VERSION`, `KIND_VERSION`, or `MINIKUBE_VERSION` in the command environment.
+The defaults in `scripts/versions.sh` are ArgoCD chart v5.24.1, kind v0.27.0, the latest minikube release, and the k3s stable channel. Override them through `ARGO_CD_CHART_VERSION`, `KIND_VERSION`, `MINIKUBE_VERSION`, or `K3S_VERSION` in the command environment.
 
 `MINIKUBE_DRIVER` also defaults to `docker` in `scripts/versions.sh`. Set it before bootstrapping to use another driver that is installed and configured on your machine. For example, to use Podman for bootstrap and subsequent quickstart commands in the same shell:
 
