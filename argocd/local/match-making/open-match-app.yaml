@@ -19,7 +19,7 @@ spec:
     targetRevision: 1.8.1
     helm:
       valueFiles:
-      - $myRepo/helm/external-values/open-match-local.yaml
+      - $myRepo/helm/external-values/local/open-match-local.yaml
 
   destination:
     name: in-cluster

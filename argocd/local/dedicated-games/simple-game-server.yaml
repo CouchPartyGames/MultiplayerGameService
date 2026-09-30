@@ -32,7 +32,7 @@ spec:
       chart: fleet
       helm:
         valueFiles:
-        - $myRepo/helm/external-values/simple-game-local.yaml
+        - $myRepo/helm/external-values/local/simple-game-local.yaml
 
 
   destination:
