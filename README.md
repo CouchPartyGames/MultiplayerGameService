@@ -11,7 +11,7 @@ This repository contains only infrastructure: ArgoCD manifests, Helm values, and
 | Dedicated hosting | Agones |
 | Matchmaking | Open Match |
 | Game servers | Agones Fleet (`simple-game-server`) |
-| Authentication | Keycloak, OpenLDAP, PostgreSQL |
+| Authentication | Keycloak, PostgreSQL |
 | Container registry | Harbor |
 | Observability | Prometheus, Grafana, Tempo, Fluent Bit |
 | General | cert-manager, ingress-nginx, Postfix / MailHog |
@@ -26,7 +26,6 @@ argocd/
   prod/           Production (GKE) skeletons for Agones and Open Match
 helm/external-values/   Helm values files referenced by the ArgoCD apps
 scripts/          Cluster bootstrap and manual Helm install scripts
-docker/           Custom Keycloak image (themes and SPIs)
 terraform/gcp/    Terraform for a GCP VPC, subnet, and GKE Standard cluster
 terraform/azure/  Terraform for an Azure virtual network, subnet, and AKS cluster
 terraform/aws/    Terraform for an AWS VPC, subnets, and EKS cluster
@@ -50,27 +49,15 @@ To create a kind cluster with the same name and install ArgoCD, run:
 ./scripts/kind-bootstrap.sh
 ```
 
-The separate commands below use the existing `openmatch` profile.
 
-1. Start a minikube cluster. This uses the `openmatch` profile with 8 CPUs and 12 GB of memory:
 
-   ```bash
-   ./scripts/minikube.sh
-   ```
-
-2. Install ArgoCD:
+1. Sync all groups in the environment.
 
    ```bash
-   ./scripts/install-argocd.sh
+   kubectl apply -f argocd/local/sync-all-groups.yaml
    ```
 
-3. Point ArgoCD at this repository:
-
-   ```bash
-   kubectl apply -f argocd/local/sync-all.yaml
-   ```
-
-4. Open the ArgoCD UI at https://localhost:8080:
+2. Open the ArgoCD UI at https://localhost:8080:
 
    ```bash
    kubectl port-forward svc/argo-cd-argocd-server -n argocd 8080:443
@@ -78,7 +65,6 @@ The separate commands below use the existing `openmatch` profile.
 
 ArgoCD syncs from the `main` branch of the GitHub repo, so changes take effect only after they are pushed.
 
-To install components without ArgoCD, use `scripts/install-agones.sh`, `scripts/install-open-match.sh`, and `scripts/install-observability.sh` instead.
 
 ## Status
 
