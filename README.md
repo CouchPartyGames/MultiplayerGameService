@@ -34,7 +34,21 @@ Every folder under `argocd/local/` defines its own ArgoCD `AppProject`. Most app
 
 ## Getting started (local)
 
-Requirements: `minikube`, `docker`, `kubectl`, `helm`.
+Requirements: `docker`, `kubectl`, `helm`, and either `minikube` or `kind`.
+
+To create the `multiplayer-demo` profile and install ArgoCD in one step, run:
+
+```bash
+./scripts/minikube-bootstrap.sh
+```
+
+To create a kind cluster with the same name and install ArgoCD, run:
+
+```bash
+./scripts/kind-bootstrap.sh
+```
+
+The separate commands below use the existing `openmatch` profile.
 
 1. Start a minikube cluster. This uses the `openmatch` profile with 8 CPUs and 12 GB of memory:
 
