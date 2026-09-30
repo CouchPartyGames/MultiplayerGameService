@@ -30,3 +30,24 @@ kubectl apply -f argocd/local/sync-all.yaml
 The Linux installers accept `INSTALL_DIR` and `KIND_VERSION` or `MINIKUBE_VERSION` overrides. The macOS installers accept the same overrides for their binary download path; Homebrew installs ignore them. The installers may use `sudo` when the destination is not writable.
 
 **Manual install notes:** `install-argocd.sh` uses the current Kubernetes context and configures a hard-coded admin password, so avoid it for a shared cluster. `install-observability.sh` has a broken line continuation in its Prometheus command and does not add the Helm repositories it references; it needs correction before use.
+
+
+# ArgoCD Cleanup
+
+
+ArgoCD Cleanup
+
+```
+        # Remove Initial Password
+kubectl delete secret argocd-initial-admin-secret -n argocd
+
+        # Annoying hack with time not set properly
+        # Setup password - https://www.browserling.com/tools/bcrypt
+        #
+        # 8w3iauj3DMh9ANM9aT
+kubectl -n argocd patch secret argocd-secret \
+  -p '{"stringData": {
+    "admin.password": "$2a$10$Nw0Uwlwv6Nv5KQSKZusrgu/ilPpgAls96ujh5/8LJQOb4FM5HgtzW",
+    "admin.passwordMtime": "'$(date +%FT%T%Z)'"
+  }}'
+```
