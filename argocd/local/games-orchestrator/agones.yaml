@@ -27,8 +27,8 @@ spec:
     namespace: agones-system
 
   syncPolicy:
-    #automated: {}
-      #prune: true
+    automated:
+      prune: true
       #selfHeal: true
     syncOptions:
       - CreateNamespace=true
