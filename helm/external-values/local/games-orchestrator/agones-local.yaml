@@ -14,8 +14,10 @@ agones:
   metrics:
     prometheusEnabled: true
     prometheusServiceDiscovery: true
+    # ServiceMonitor needs the monitoring.coreos.com CRDs (general/prometheus-crds),
+    # which are not registered by sync-all-groups.yaml. Enable once they are installed.
     serviceMonitor:
-      enabled: true
+      enabled: false
       interval: 30s
       
   controller:
