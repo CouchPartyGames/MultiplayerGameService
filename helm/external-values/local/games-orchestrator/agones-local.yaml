@@ -44,6 +44,14 @@ agones:
     replicas: 1
     generateTLS: false
     generateClientTLS: false
+    # k3s ServiceLB binds each LoadBalancer port on the node, and Traefik already
+    # holds 443 there, so the default port leaves the service pending. Keep http
+    # and grpc on the same port, or the chart exposes grpc separately on 443.
+    service:
+      http:
+        port: 8443
+      grpc:
+        port: 8443
     annotations:
       region: local
       provider: minikube
