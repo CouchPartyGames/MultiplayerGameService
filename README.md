@@ -21,17 +21,26 @@ This repository contains only infrastructure: ArgoCD manifests, Helm values, and
 
 ```
 argocd/
-  local/          ArgoCD projects and apps for a local minikube cluster
-    sync-all.yaml   App-of-apps entry point (one sync app per area)
-  prod/           Production (GKE) skeletons for Agones and Open Match
-helm/external-values/   Helm values files referenced by the ArgoCD apps
-scripts/          Cluster bootstrap and manual Helm install scripts
-terraform/gcp/    Terraform for a GCP VPC, subnet, and GKE Standard cluster
-terraform/azure/  Terraform for an Azure virtual network, subnet, and AKS cluster
-terraform/aws/    Terraform for an AWS VPC, subnets, and EKS cluster
+  CODING-STANDARD.md   Standard for ArgoCD manifests and values files
+  README.md            ArgoCD overview and review notes
+  local/               ArgoCD projects and apps for the local cluster
+    sync-all-groups.yaml   App-of-apps entry point (infra, games, games-orchestrator)
+    infra/                 ArgoCD, Kargo, cert-manager, Argo Rollouts
+    games-orchestrator/    Agones
+    games/                 Sample game Fleet (simple-game-server)
+    match-making/          Open Match (not registered in sync-all-groups.yaml)
+    general/               Observability, certificates, and mail apps (not registered)
+helm/external-values/
+  local/               Helm values files referenced by the ArgoCD apps
+    infra/, games-orchestrator/   Values grouped by area (older files sit directly in local/)
+  prod/                Unused
+scripts/               Cluster bootstrap (minikube, kind, k3s), CLI installers, versions.sh
+terraform/gcp/         Terraform for a GCP VPC, subnet, and GKE Standard cluster
+terraform/azure/       Terraform for an Azure virtual network, subnet, and AKS cluster
+terraform/aws/         Terraform for an AWS VPC, subnets, and EKS cluster
 ```
 
-Every folder under `argocd/local/` defines its own ArgoCD `AppProject`. Most apps have two sources: the upstream Helm chart, and this repository, referenced as `$myRepo`, which provides the values files from `helm/external-values/`.
+Every folder under `argocd/local/` except `general/` defines its own ArgoCD `AppProject`; `general/` uses the built-in `default` project. Most apps have two sources: the upstream Helm chart, and this repository, referenced as `$myRepo`, which provides the values files from `helm/external-values/`.
 
 ## Getting started (local)
 
@@ -68,7 +77,7 @@ ArgoCD syncs from the `main` branch of the GitHub repo, so changes take effect o
 
 ## Status
 
-This is a work-in-progress demo. The local environment is the most complete. To create cloud infrastructure, follow the [GCP/GKE setup](terraform/gcp/README.md), [Azure/AKS setup](terraform/azure/README.md), or [AWS/EKS setup](terraform/aws/README.md). The production ArgoCD manifests are still skeletons.
+This is a work-in-progress demo. The local environment is the most complete. To create cloud infrastructure, follow the [GCP/GKE setup](terraform/gcp/README.md), [Azure/AKS setup](terraform/azure/README.md), or [AWS/EKS setup](terraform/aws/README.md). There are no production ArgoCD manifests yet.
 
 ## License
 
