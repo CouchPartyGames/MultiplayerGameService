@@ -44,7 +44,7 @@ Every folder under `argocd/local/` except `general/` defines its own ArgoCD `App
 
 ## Getting started (local)
 
-Requirements: `docker`, `kubectl`, `helm`, and either `minikube` or `kind`.
+Requirements: `docker`, `kubectl`, `helm`, and one of `minikube`, `kind`, or k3s.
 
 To create the `multiplayer-demo` profile and install ArgoCD in one step, run:
 
@@ -58,7 +58,15 @@ To create a kind cluster with the same name and install ArgoCD, run:
 ./scripts/kind-bootstrap.sh
 ```
 
+To use k3s instead, run the following command. It installs k3s on Linux, or a k3d cluster named `k3s-local` on macOS, if one is missing, then installs ArgoCD:
 
+```bash
+./scripts/k3s-bootstrap.sh
+```
+
+On Linux, run `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` before the steps below if your kubeconfig does not already point at k3s. On macOS, the script switches the current context to `k3d-k3s-local`. See [scripts/README.md](scripts/README.md#k3s-quickstart) for more k3s commands.
+
+After bootstrapping:
 
 1. Sync all groups in the environment.
 

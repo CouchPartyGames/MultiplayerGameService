@@ -74,6 +74,7 @@ Run from the repository root with a working container runtime, Helm, kubectl, an
 ```bash
 ./scripts/minikube-bootstrap.sh
 # Or: ./scripts/kind-bootstrap.sh
+# Or: ./scripts/k3s-bootstrap.sh
 ```
 
 1. Register this repository's SSH URL in ArgoCD, as described in the [scripts README](../scripts/README.md#add-the-git-repository).
@@ -85,12 +86,14 @@ Run from the repository root with a working container runtime, Helm, kubectl, an
    kubectl --context multiplayer-demo -n argocd get applications,applicationsets,appprojects
    ```
 
-   For kind, use `--context kind-multiplayer-demo`.
+   For kind, use `--context kind-multiplayer-demo`. For k3s on macOS, use `--context k3d-k3s-local`. For k3s on Linux, drop `--context` and run `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` first.
 4. Sync Agones manually, then let `simple-game-server` retry:
 
    ```bash
    argocd app sync argocd/agones-local
    ```
+
+The Agones allocator serves HTTP and gRPC on port 8443 on every local cluster, because on k3s ServiceLB binds LoadBalancer ports on the node and Traefik already holds 443.
 
 Applying the entry point creates the parent Applications; child synchronization still depends on valid manifests, allowed repositories, available charts, and prerequisite CRDs. Do not apply `general/` or `match-making/` directly until the naming conflicts below are fixed.
 
