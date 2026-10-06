@@ -82,6 +82,22 @@ After bootstrapping:
 
 ArgoCD syncs from the `main` branch of the GitHub repo, so changes take effect only after they are pushed.
 
+## Stopping and deleting the local cluster
+
+Stopping frees CPU and memory but keeps the cluster, ArgoCD, and synced apps for the next start. Deleting removes the cluster and all of its data; run the bootstrap script again to recreate it.
+
+| Cluster | Stop | Start again | Delete |
+| --- | --- | --- | --- |
+| minikube | `minikube stop --profile multiplayer-demo` | `minikube start --profile multiplayer-demo` | `minikube delete --profile multiplayer-demo` |
+| kind | `docker stop multiplayer-demo-control-plane` | `docker start multiplayer-demo-control-plane` | `kind delete cluster --name multiplayer-demo` |
+| k3s (Linux) | `/usr/local/bin/k3s-killall.sh` | `sudo systemctl start k3s` | `/usr/local/bin/k3s-uninstall.sh` |
+| k3d (macOS) | `k3d cluster stop k3s-local` | `k3d cluster start k3s-local` | `k3d cluster delete k3s-local` |
+
+- **minikube:** start an existing profile with the driver it was created with. If you bootstrapped with a non-default `MINIKUBE_DRIVER`, add `--driver "$MINIKUBE_DRIVER"`.
+- **kind:** kind has no stop command, so stop and start the cluster's node container with Docker. `kind-bootstrap.sh` fails if the cluster already exists, so use `docker start` rather than the bootstrap script to bring a stopped cluster back.
+- **k3s:** `sudo systemctl stop k3s` stops only the k3s service; pods and their containers keep running. `k3s-killall.sh` stops the service, all containers, and k3s networking. k3s also starts again on boot; run `sudo systemctl disable k3s` to prevent that. The uninstall script removes k3s and all cluster data. Both scripts rerun themselves with `sudo`.
+- **k3d:** if you set `K3D_CLUSTER_NAME`, use that name instead of `k3s-local`.
+
 
 ## Status
 

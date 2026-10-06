@@ -86,9 +86,11 @@ Run `./scripts/kind-bootstrap.sh` for the initial cluster and ArgoCD setup, as i
 | Load a local Docker image | `kind load docker-image <image>:<tag> --name multiplayer-demo` |
 | Load an image archive | `kind load image-archive <archive.tar> --name multiplayer-demo` |
 | Export cluster logs | `kind export logs ./kind-logs --name multiplayer-demo` |
+| Stop the cluster, keeping its data | `docker stop multiplayer-demo-control-plane` |
+| Start a stopped cluster | `docker start multiplayer-demo-control-plane` |
 | Delete the cluster and its data | `kind delete cluster --name multiplayer-demo` |
 
-Run the create command only when the cluster does not already exist. Replace the image and archive placeholders with your local values. For loaded images, use a non-`latest` tag and set the workload's `imagePullPolicy` to `IfNotPresent` or `Never` so Kubernetes uses the local image.
+kind has no stop command, so stop and start the cluster's node container with Docker. Run the create command, or `kind-bootstrap.sh`, only when the cluster does not already exist. Replace the image and archive placeholders with your local values. For loaded images, use a non-`latest` tag and set the workload's `imagePullPolicy` to `IfNotPresent` or `Never` so Kubernetes uses the local image.
 
 See the [official kind quick start](https://kind.sigs.k8s.io/docs/user/quick-start/) for more examples.
 
@@ -109,9 +111,11 @@ To install without ArgoCD, run `./scripts/k3s-install-linux.sh` (Linux) or `./sc
 | --- | --- | --- |
 | Kubeconfig | `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` | Context `k3d-k3s-local`, set by the installer |
 | Check nodes | `kubectl get nodes` | `kubectl --context k3d-k3s-local get nodes` |
-| Stop | `sudo systemctl stop k3s` | `k3d cluster stop k3s-local` |
+| Stop | `/usr/local/bin/k3s-killall.sh` | `k3d cluster stop k3s-local` |
 | Start | `sudo systemctl start k3s` | `k3d cluster start k3s-local` |
 | Uninstall | `/usr/local/bin/k3s-uninstall.sh` | `k3d cluster delete k3s-local` |
+
+On Linux, `sudo systemctl stop k3s` stops only the k3s service; pods and their containers keep running. `k3s-killall.sh` stops the service, all containers, and k3s networking. k3s starts again on boot unless you run `sudo systemctl disable k3s`. Both `k3s-killall.sh` and `k3s-uninstall.sh` rerun themselves with `sudo`.
 
 Set `K3D_CLUSTER_NAME` to change the macOS cluster name; the context is then `k3d-<name>`. Use `INSTALL_K3S_EXEC` on Linux to pass server flags, such as `--disable traefik`; setting it replaces the default `--write-kubeconfig-mode 644`, so include that flag too if you want a kubeconfig readable without `sudo`.
 
