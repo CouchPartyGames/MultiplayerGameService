@@ -2,7 +2,7 @@
 
 This directory defines the `infra` ArgoCD project and the tools used to promote,
 deploy, and verify internal infrastructure changes in the local cluster. The
-project and its four Application definitions live together so ArgoCD can manage
+project and its five Application definitions live together so ArgoCD can manage
 them as one infrastructure group.
 
 | Definition | Purpose | Chart version | Destination namespace |
@@ -11,6 +11,7 @@ them as one infrastructure group.
 | [kargo.yaml](kargo.yaml) | Promotes selected artifact versions between stages and uses ArgoCD to deploy them. | `1.11.5` | `kargo` |
 | [cert-manager.yaml](cert-manager.yaml) | Manages TLS certificates, including the certificates used by Kargo's API and admission webhooks. | `v1.14.4` | `cert-manager` |
 | [argo-rollouts.yaml](argo-rollouts.yaml) | Provides progressive delivery and the AnalysisTemplate/AnalysisRun resources Kargo uses to verify promotions. | `2.43.2` | `argo-rollouts` |
+| [atlantis.yaml](atlantis.yaml) | Runs `terraform plan` and `apply` from pull request comments. | `6.16.1` | `atlantis` |
 
 [project.yaml](project.yaml) permits these chart repositories, the Git repository,
 and their destination namespaces on `in-cluster`. It also permits cluster-scoped
@@ -26,9 +27,9 @@ Application `infra-local`, which reads this directory. The project has sync wave
 
 The parent tracks Git `HEAD`; application values sources track `main`. Local
 edits must reach the tracked remote revision before ArgoCD can reconcile them.
-All four applications enable automatic synchronization, pruning, and namespace
-creation. Kargo, cert-manager, and Argo Rollouts also enable self-healing and
-server-side apply.
+All five applications enable automatic synchronization, pruning, and namespace
+creation. Kargo, cert-manager, Argo Rollouts, and Atlantis also enable
+self-healing and server-side apply.
 
 The `argo-cd` Application manages the ArgoCD installation itself. It installs the
 chart as release `argo-cd` in `argocd`, the same release the bootstrap scripts
@@ -36,7 +37,7 @@ create, so its `targetRevision` must match `ARGO_CD_CHART_VERSION` in
 `scripts/versions.sh`. Otherwise the first sync changes the ArgoCD version the
 bootstrap installed.
 
-ArgoCD, Kargo, and cert-manager use values from
+ArgoCD, Kargo, cert-manager, and Atlantis use values from
 [helm/external-values/local/infra](../../../helm/external-values/local/infra/). Argo Rollouts
 uses its pinned chart defaults, which install its CRDs and a controller with
 cluster-wide permissions. Kargo's ArgoCD and Argo Rollouts integrations are
@@ -53,13 +54,30 @@ delivered.
    `ADMIN_ACCOUNT_TOKEN_SIGNING_KEY`. The Kargo values reference this existing
    Secret. SOPS + age decryption is not set up in ArgoCD yet, so create it by hand
    as shown in [Troubleshooting](#kargo-api-pod-stuck-in-createcontainerconfigerror).
-3. Register the parent applications from the repository root:
+3. Provision the `atlantis-vcs` Secret in the `atlantis` namespace with the keys
+   `github_token` (a GitHub token for the account named in `github.user`) and
+   `github_secret` (the webhook secret). The Atlantis values reference this
+   existing Secret:
+
+   ```bash
+   kubectl create namespace atlantis
+   kubectl -n atlantis create secret generic atlantis-vcs \
+     --from-literal=github_token='<github-token>' \
+     --from-literal=github_secret="$(openssl rand -hex 32)"
+   ```
+
+   Until it exists, the `atlantis-0` pod stays in `CreateContainerConfigError`.
+   Atlantis listens on a ClusterIP Service; reach it with
+   `kubectl -n atlantis port-forward svc/atlantis 4141:80`. GitHub webhooks
+   cannot reach a local cluster without a tunnel, so pull request automation
+   needs one (and `atlantisUrl` set to its address).
+4. Register the parent applications from the repository root:
 
    ```bash
    kubectl apply -f argocd/local/sync-all-groups.yaml
    ```
 
-4. Confirm cert-manager and Argo Rollouts are healthy before relying on Kargo.
+5. Confirm cert-manager and Argo Rollouts are healthy before relying on Kargo.
    Child Applications reconcile independently: the project's sync wave orders
    their definitions, but does not wait for their controllers or CRDs to become
    ready. If Kargo's first sync fails while cert-manager is starting, sync Kargo
@@ -118,6 +136,11 @@ helm template argo-rollouts argo-rollouts \
 helm template kargo oci://ghcr.io/akuity/kargo-charts/kargo \
   --version 1.11.5 --namespace kargo \
   -f helm/external-values/local/infra/kargo-local.yaml
+
+helm template atlantis atlantis \
+  --repo https://runatlantis.github.io/helm-charts --version 6.16.1 \
+  --namespace atlantis \
+  -f helm/external-values/local/infra/atlantis-local.yaml
 ```
 
 With ArgoCD CRDs installed, validate the project and application manifests using
@@ -125,4 +148,5 @@ With ArgoCD CRDs installed, validate the project and application manifests using
 
 Upstream documentation: [Kargo installation](https://docs.kargo.io/operator-guide/basic-installation),
 [Argo Rollouts installation](https://argoproj.github.io/argo-rollouts/installation/),
-and [cert-manager Helm installation](https://cert-manager.io/docs/installation/helm/).
+[cert-manager Helm installation](https://cert-manager.io/docs/installation/helm/),
+and [Atlantis Kubernetes deployment](https://www.runatlantis.io/docs/deployment.html#kubernetes-helm-chart).

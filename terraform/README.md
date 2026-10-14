@@ -26,6 +26,20 @@ TERRAFORM_VERSION=1.16.4 ./terraform/terraform-install-linux.sh
 
 Check the installed version with `terraform version`.
 
+## Install Atlantis
+
+On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
+
+```bash
+./terraform/atlantis-install.sh
+```
+
+The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `version.sh`; override it for one run with:
+
+```bash
+ATLANTIS_VERSION=0.48.1 ./terraform/atlantis-install.sh
+```
+
 ## GCP configuration
 
 `gcp/` defines a single-zone GKE cluster, its VPC and subnet, a node service account, and an optional Agones UDP firewall rule. It requires Terraform 1.5 through 1.x and Google provider 7.x. Before planning, authenticate to GCP and provide a project with billing enabled and the permissions needed to create these resources.

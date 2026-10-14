@@ -1,0 +1,18 @@
+# Overrides for the Atlantis chart (https://github.com/runatlantis/helm-charts/tree/main/charts/atlantis).
+
+orgAllowlist: 'github.com/CouchPartyGames/*'
+
+# ATLANTIS_GH_USER must be the account that owns the token in the atlantis-vcs Secret.
+github:
+  user: CouchPartyGames
+
+# The token and webhook secret are read from a Secret created by hand
+# (keys github_token and github_secret), so none are committed here.
+vcsSecretName: atlantis-vcs
+
+# The local cluster has no ingress controller; reach Atlantis with kubectl port-forward.
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: false

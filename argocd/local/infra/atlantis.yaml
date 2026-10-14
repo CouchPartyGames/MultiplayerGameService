@@ -1,0 +1,42 @@
+---
+# https://www.runatlantis.io/docs/deployment.html#kubernetes-helm-chart
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: atlantis
+  namespace: argocd
+  labels:
+    environment: local
+    purpose: terraform-automation
+spec:
+  project: infra
+
+  sources:
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
+      targetRevision: main
+      ref: myRepo
+    - chart: atlantis
+      repoURL: https://runatlantis.github.io/helm-charts
+      # Chart 6.16.1 ships Atlantis v0.48.1, matching ATLANTIS_VERSION in terraform/version.sh.
+      targetRevision: 6.16.1
+      helm:
+        valueFiles:
+          - $myRepo/helm/external-values/local/infra/atlantis-local.yaml
+
+  destination:
+    name: in-cluster
+    namespace: atlantis
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+    retry:
+      limit: 3
+
+  revisionHistoryLimit: 3

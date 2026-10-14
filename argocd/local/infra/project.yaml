@@ -19,6 +19,7 @@ spec:
     - https://argoproj.github.io/argo-helm
     - https://charts.jetstack.io
     - ghcr.io/akuity/kargo-charts
+    - https://runatlantis.github.io/helm-charts
     - git@github.com:CouchPartyGames/MultiplayerGameService.git
 
   destinations:
@@ -38,6 +39,8 @@ spec:
     - namespace: kargo-system-resources
       name: in-cluster
     - namespace: kargo-shared-resources
+      name: in-cluster
+    - namespace: atlantis
       name: in-cluster
 
   clusterResourceWhitelist:
