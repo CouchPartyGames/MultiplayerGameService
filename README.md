@@ -15,7 +15,8 @@ This repository contains only infrastructure: ArgoCD manifests, Helm values, and
 | Container registry | Harbor |
 | Observability | Prometheus, Grafana, Tempo, Fluent Bit |
 | General | cert-manager, ingress-nginx, Postfix / MailHog |
-| Delivery | ArgoCD, with SOPS + age for secrets |
+| Cloud infrastructure | Terraform, Atlantis |
+| Delivery | ArgoCD, Kargo, Argo Rollouts, with SOPS + age for secrets |
 
 ## Repository layout
 
@@ -25,7 +26,7 @@ argocd/
   README.md            ArgoCD overview and review notes
   local/               ArgoCD projects and apps for the local cluster
     sync-all-groups.yaml   App-of-apps entry point (infra, games, games-orchestrator)
-    infra/                 ArgoCD, Kargo, cert-manager, Argo Rollouts
+    infra/                 ArgoCD, Kargo, cert-manager, Argo Rollouts, Atlantis
     games-orchestrator/    Agones
     games/                 Sample game Fleet (simple-game-server)
     match-making/          Open Match (not registered in sync-all-groups.yaml)
@@ -41,6 +42,22 @@ terraform/aws/         Terraform for an AWS VPC, subnets, and EKS cluster
 ```
 
 Every folder under `argocd/local/` except `general/` defines its own ArgoCD `AppProject`; `general/` uses the built-in `default` project. Most apps have two sources: the upstream Helm chart, and this repository, referenced as `$myRepo`, which provides the values files from `helm/external-values/`.
+
+## How the project uses GitOps
+
+Git is the source of truth for both the cloud infrastructure and the applications that run on it. Changes are proposed in pull requests, and tooling applies them from Git rather than by hand. The work is split into two layers.
+
+### Layer 1: Infrastructure
+
+[Atlantis](https://www.runatlantis.io) and [Terraform](https://www.terraform.io) provision cloud resources on AWS, GCP, and Azure. Each cloud has its own configuration under `terraform/` (EKS, GKE, and AKS, with their networking and IAM). When a pull request changes Terraform, Atlantis runs `terraform plan` and posts the result on the pull request; a comment runs `terraform apply`.
+
+Atlantis itself runs in the cluster as an ArgoCD Application ([argocd/local/infra/atlantis.yaml](argocd/local/infra/atlantis.yaml)). It needs a hand-created `atlantis-vcs` Secret, and GitHub webhooks need a tunnel to reach a local cluster; see [argocd/local/infra/README.md](argocd/local/infra/README.md#bootstrap-requirements).
+
+### Layer 2: Application
+
+[ArgoCD](https://argo-cd.readthedocs.io) and [Kargo](https://kargo.io) deliver applications into Kubernetes clusters. ArgoCD reconciles each cluster with the manifests under `argocd/` and the Helm values under `helm/external-values/`, starting from the app-of-apps entry point `argocd/local/sync-all-groups.yaml`. Kargo promotes artifact versions between stages and uses ArgoCD to deploy them, with Argo Rollouts verifying each promotion.
+
+Today, only the local cluster is wired up, and Kargo promotion stages are not defined yet. Nothing in `argocd/` targets the Terraform-provisioned cloud clusters.
 
 ## Getting started (local)
 
