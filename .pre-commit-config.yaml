@@ -1,0 +1,29 @@
+# Pre-commit hooks (https://pre-commit.com). Install once per clone with `pre-commit install`.
+# The Terraform hooks call the local `terraform` binary; install it with
+# terraform/terraform-install-linux.sh or terraform/terraform-install-mac.sh.
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.109.2
+    hooks:
+      # Fails when any .tf file is not in canonical format (same check as CI's `terraform fmt -check`).
+      - id: terraform_fmt
+        files: ^terraform/
+        args:
+          - --args=-check
+          - --args=-diff
+      # Runs `terraform init -backend=false` when needed, then `terraform validate`,
+      # in each directory under terraform/ with changed .tf files.
+      - id: terraform_validate
+        files: ^terraform/
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      # Checks argocd/ manifests against the YAML formatting rules in argocd/CODING-STANDARD.md.
+      - id: yamllint
+        files: ^argocd/.*\.yaml$
+        args:
+          - --strict
+          - --config-file=.yamllint.yaml

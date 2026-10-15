@@ -1,0 +1,32 @@
+# Atlantis repo-level config (https://www.runatlantis.io/docs/repo-level-atlantis-yaml.html).
+# Each cloud configuration under terraform/ is its own project, planned when its files change.
+version: 3
+automerge: false
+parallel_plan: true
+parallel_apply: false
+
+projects:
+  - name: aws
+    dir: terraform/aws
+    workspace: default
+    # Keep in sync with TERRAFORM_VERSION in terraform/version.sh.
+    terraform_version: v1.16.4
+    autoplan:
+      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      enabled: true
+
+  - name: azure
+    dir: terraform/azure
+    workspace: default
+    terraform_version: v1.16.4
+    autoplan:
+      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      enabled: true
+
+  - name: gcp
+    dir: terraform/gcp
+    workspace: default
+    terraform_version: v1.16.4
+    autoplan:
+      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      enabled: true
