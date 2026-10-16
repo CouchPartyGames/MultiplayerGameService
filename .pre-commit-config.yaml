@@ -40,10 +40,11 @@ repos:
         files: ^helm/charts/
 
       # Runs `ct lint` (yamllint, Chart.yaml schema, helm lint, version bump check)
-      # on charts changed against main, the same check as CI. Needs Docker.
+      # on charts changed against main, the same check as CI. Calls the local `ct`,
+      # `yamllint`, and `yamale`; install them with helm/tools/ct-install.sh.
       - id: ct-lint
         name: chart-testing lint
-        entry: helm/scripts/ct.sh lint
+        entry: helm/scripts/ct-lint.sh
         language: script
         files: ^(helm/charts/|ct\.yaml$)
         pass_filenames: false
