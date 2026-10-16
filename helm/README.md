@@ -7,7 +7,8 @@ helm/
 ├── external-values/
 │   ├── local/   Values for the local cluster, grouped by area (infra/, games-orchestrator/)
 │   └── prod/    Unused; there are no production ArgoCD manifests yet
-└── scripts/     Helm CLI installer and version defaults
+├── scripts/     Helm CLI installer and version defaults
+└── tools/       Native chart-testing (ct) installer
 ```
 
 Applications load these files through the multi-source pattern. One source is this repo with `ref: myRepo`, and the chart source lists `$myRepo/helm/external-values/...` under `helm.valueFiles`. When you add or move a values file, update every `$myRepo/...` path that points to it. The chart version is pinned in the Application's `targetRevision`, not in the values file.
@@ -19,8 +20,11 @@ Run these from the repository root.
 | Script | Purpose |
 | --- | --- |
 | `scripts/helm-install.sh` | Install the Helm CLI on Linux or macOS (amd64 or arm64) from `get.helm.sh`. It verifies the download's SHA-256 checksum, installs to `INSTALL_DIR` (default: `/usr/local/bin`), and uses `sudo` only if that directory is not writable. |
-| `scripts/version.sh` | Set the default `HELM_VERSION` (`latest`, or a release such as `v3.16.2`). |
+| `scripts/version.sh` | Set the default `HELM_VERSION` (`latest`, or a release such as `v3.16.2`) and `CT_VERSION`, the chart-testing version installed by `tools/ct-install.sh` and used by CI. |
 | `scripts/helm-lint.sh` | Run `helm lint --strict` on each chart under `helm/charts/` that contains one of the given files, or on every chart when given none. The `helm-lint` pre-commit hook runs it on staged chart files. |
+| `scripts/ct-lint.sh` | Run `ct lint` with `ct.yaml` using the locally installed `ct` (no Docker), on charts changed against `main`. Extra arguments go to `ct` (for example `--all`). The `ct-lint` pre-commit hook runs it. |
+| `scripts/ct-test.sh` | Run `ct install` with `ct.yaml` using the locally installed `ct`: install each chart changed against `main` into the current kube context, run its tests, and delete its namespace. Needs `kubectl` and a running local cluster. Extra arguments go to `ct` (for example `--all`). The `ct-install` pre-commit hook runs it, only on demand with `pre-commit run ct-install --hook-stage manual`. |
+| `tools/ct-install.sh` | Install the `ct` CLI natively on Linux or macOS (amd64 or arm64), so you can run chart-testing without Docker. It downloads the `CT_VERSION` release from GitHub, verifies its SHA-256 checksum, installs `ct` to `INSTALL_DIR` (default: `/usr/local/bin`, with `sudo` only if not writable), copies ct's lint config to `~/.ct`, and installs `yamllint` and `yamale` through pipx or `pip --user` if they are missing. |
 
 ```bash
 # Install the version set in version.sh
@@ -32,6 +36,8 @@ HELM_VERSION=v3.16.2 ./helm/scripts/helm-install.sh
 # Install somewhere that does not need sudo
 INSTALL_DIR="$HOME/.local/bin" ./helm/scripts/helm-install.sh
 ```
+
+The `helm` GitHub workflow (`.github/workflows/helm.yaml`) runs [chart-testing](https://github.com/helm/chart-testing) on charts under `helm/charts/` that a pull request changes: `ct lint` (yamllint, Chart.yaml schema, `helm lint`, and a chart version bump check), then `ct install` into a kind cluster. On pushes to `main` it tests every chart. Its settings are in `ct.yaml` at the repository root. Run the same steps locally with `helm/scripts/ct-lint.sh` (after `helm/tools/ct-install.sh`) and `helm/scripts/ct-test.sh`.
 
 The default `latest` resolves to the newest Helm release when the script runs. To give everyone the same version, set a fixed release in `version.sh`.
 
