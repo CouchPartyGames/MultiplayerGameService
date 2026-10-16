@@ -140,17 +140,17 @@ See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for mor
 
 ## Version and install options
 
-`scripts/k8s-providers/versions.sh` sets these defaults. Override any of them in the command environment:
+These defaults come from the file in the Set in column. Override any of them in the command environment:
 
-| Variable | Default | Used by |
-| --- | --- | --- |
-| `ARGO_CD_CHART_VERSION` | `10.9.5` (ArgoCD v3.5.3) | All bootstrap scripts |
-| `ARGOCD_CLI_VERSION` | `latest` | ArgoCD CLI installers |
-| `KIND_VERSION` | `v0.27.0` | kind installers |
-| `MINIKUBE_VERSION` | `latest` | minikube installers |
-| `PRE_COMMIT_VERSION` | `latest` | `tools/precommit-install.sh` (Homebrew only for `latest`) |
-| `MINIKUBE_DRIVER` | `docker` | `minikube-bootstrap.sh` |
-| `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | k3s installers |
+| Variable | Default | Set in | Used by |
+| --- | --- | --- | --- |
+| `ARGO_CD_CHART_VERSION` | `10.9.5` (ArgoCD v3.5.3) | `k8s-providers/versions.sh` | All bootstrap scripts |
+| `ARGOCD_CLI_VERSION` | `latest` | `tools/version.sh` | ArgoCD CLI installers |
+| `KIND_VERSION` | `v0.27.0` | `k8s-providers/versions.sh` | kind installers |
+| `MINIKUBE_VERSION` | `latest` | `k8s-providers/versions.sh` | minikube installers |
+| `PRE_COMMIT_VERSION` | `latest` | `tools/version.sh` | `tools/precommit-install.sh` (Homebrew only for `latest`) |
+| `MINIKUBE_DRIVER` | `docker` | `k8s-providers/versions.sh` | `minikube-bootstrap.sh` |
+| `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | `k8s-providers/versions.sh` | k3s installers |
 
 The chart version in `k8s-providers/versions.sh` matches `argocd/local/infra/argo-cd.yaml`, which manages ArgoCD after the `infra-local` Application syncs. Change both together.
 
