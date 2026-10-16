@@ -20,6 +20,7 @@ Run these from the repository root.
 | --- | --- |
 | `scripts/helm-install.sh` | Install the Helm CLI on Linux or macOS (amd64 or arm64) from `get.helm.sh`. It verifies the download's SHA-256 checksum, installs to `INSTALL_DIR` (default: `/usr/local/bin`), and uses `sudo` only if that directory is not writable. |
 | `scripts/version.sh` | Set the default `HELM_VERSION` (`latest`, or a release such as `v3.16.2`). |
+| `scripts/helm-lint.sh` | Run `helm lint --strict` on each chart under `helm/charts/` that contains one of the given files, or on every chart when given none. The `helm-lint` pre-commit hook runs it on staged chart files. |
 
 ```bash
 # Install the version set in version.sh

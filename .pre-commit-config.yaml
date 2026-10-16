@@ -28,3 +28,13 @@ repos:
         args:
           - --strict
           - --config-file=.yamllint.yaml
+
+  - repo: local
+    hooks:
+      # Runs `helm lint --strict` on each chart under helm/charts/ with changed files.
+      # Calls the local `helm` binary; install it with helm/scripts/helm-install.sh.
+      - id: helm-lint
+        name: helm lint
+        entry: helm/scripts/helm-lint.sh
+        language: script
+        files: ^helm/charts/
