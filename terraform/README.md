@@ -40,6 +40,18 @@ The script downloads Atlantis from its GitHub releases, checks the archive again
 ATLANTIS_VERSION=0.48.1 ./terraform/atlantis-install.sh
 ```
 
+## Terraform skill for AI agents
+
+The repository includes Anton Babenko's [terraform-skill](https://github.com/antonbabenko/terraform-skill), an agent skill with Terraform and OpenTofu guidance for writing, reviewing, and debugging modules, tests, CI, security scans, and state operations. The skill files live in `.agents/skills/terraform-skill/`, `.claude/skills/terraform-skill` links to them for Claude Code, and `skills-lock.json` records the source and content hash.
+
+Claude Code loads the skill automatically when a task involves Terraform. You can also invoke it directly with `/terraform-skill`. With the skill loaded, the agent states its version and backend assumptions, names the risk it addresses, gives validation commands such as `terraform fmt -check`, `terraform validate`, and `terraform plan -out`, and includes rollback notes for state-changing work. It will not run `terraform destroy` until it has shown a `terraform plan -destroy` and received confirmation.
+
+To install the skill in another checkout or update it to the latest release, run:
+
+```bash
+npx skills add antonbabenko/terraform-skill
+```
+
 ## GCP configuration
 
 `gcp/` defines a single-zone GKE cluster, its VPC and subnet, a node service account, and an optional Agones UDP firewall rule. It requires Terraform 1.5 through 1.x and Google provider 7.x. Before planning, authenticate to GCP and provide a project with billing enabled and the permissions needed to create these resources.

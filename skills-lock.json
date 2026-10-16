@@ -115,6 +115,12 @@
       "skillPath": "skills/productivity/teach/SKILL.md",
       "computedHash": "b8a69574c7a019bed84e84313dc8bf02e1d1bf925ba43057d433217c63863206"
     },
+    "terraform-skill": {
+      "source": "antonbabenko/terraform-skill",
+      "sourceType": "github",
+      "skillPath": "skills/terraform-skill/SKILL.md",
+      "computedHash": "2fbcf60b149bd4ed5a31c82b799b15fe955138238a3f68ec697605d994cb9234"
+    },
     "to-questionnaire": {
       "source": "mattpocock/skills",
       "sourceType": "github",
