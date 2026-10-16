@@ -12,8 +12,8 @@ Infrastructure/GitOps config for a multiplayer game backend demo built on **Agon
 - `argocd/local/sync-all-groups.yaml` is the app-of-apps entry point. It registers the parents `infra-local`, `games-local`, and `games-orchestrator-local`, which read those directories on `HEAD`. `match-making/` and `general/` are not registered. The cluster syncs what is pushed to `main`, so local edits have no effect until pushed.
 - `helm/external-values/<env>/<area>/` holds Helm values files that Applications use through the multi-source pattern: one source is this repo with `ref: myRepo`, and the chart source references `$myRepo/helm/external-values/...`. That path is relative to the repo root, so when you add or move a values file, update every `$myRepo/...` path that points to it. Older values files still sit directly in `helm/external-values/local/`.
 - Chart versions are pinned in the Application/ApplicationSet `targetRevision`, not in values files.
-- `argocd/local/infra/argo-cd.yaml` manages the ArgoCD install itself (release `argo-cd`, the same one the bootstrap scripts create). Change its `targetRevision` together with `ARGO_CD_CHART_VERSION` in `scripts/versions.sh`.
-- `scripts/` holds the imperative steps that run outside ArgoCD: cluster bootstrap for minikube, kind, and k3s (each installs ArgoCD via Helm), CLI installers, and shared version defaults in `versions.sh`. `scripts/README.md` documents them and the ArgoCD CLI workflow.
+- `argocd/local/infra/argo-cd.yaml` manages the ArgoCD install itself (release `argo-cd`, the same one the bootstrap scripts create). Change its `targetRevision` together with `ARGO_CD_CHART_VERSION` in `scripts/k8s-providers/versions.sh`.
+- `scripts/` holds the imperative steps that run outside ArgoCD: cluster bootstrap for minikube, kind, and k3s (each installs ArgoCD via Helm), CLI installers, and version defaults in `k8s-providers/versions.sh` (cluster tools, ArgoCD chart) and `tools/version.sh` (CLIs). `scripts/README.md` documents them and the ArgoCD CLI workflow.
 - `terraform/` holds separate GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations, plus Terraform and Atlantis installers in `terraform/scripts/` (versions in `terraform/scripts/version.sh`). Nothing in `argocd/` targets those clusters yet.
 
 ## Environments
@@ -28,7 +28,7 @@ SOPS + age is the intended secrets workflow, but it is not wired up: ArgoCD has 
 
 ```bash
 # Local cluster + ArgoCD bootstrap
-./scripts/minikube-bootstrap.sh
+./scripts/k8s-providers/minikube-bootstrap.sh
 kubectl apply -f argocd/local/sync-all-groups.yaml
 
 # ArgoCD UI and CLI at https://localhost:4444

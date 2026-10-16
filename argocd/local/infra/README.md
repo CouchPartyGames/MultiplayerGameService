@@ -34,7 +34,7 @@ self-healing and server-side apply.
 The `argo-cd` Application manages the ArgoCD installation itself. It installs the
 chart as release `argo-cd` in `argocd`, the same release the bootstrap scripts
 create, so its `targetRevision` must match `ARGO_CD_CHART_VERSION` in
-`scripts/versions.sh`. Otherwise the first sync changes the ArgoCD version the
+`scripts/k8s-providers/versions.sh`. Otherwise the first sync changes the ArgoCD version the
 bootstrap installed.
 
 ArgoCD, Kargo, cert-manager, and Atlantis use values from
