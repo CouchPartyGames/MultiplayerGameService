@@ -2,30 +2,46 @@
 
 Run these commands from the repository root. The bootstrap scripts need Helm, `kubectl`, and a working container runtime or VM driver. The kind and minikube bootstrap scripts also need their cluster CLI on `PATH` and exit if it is missing; install it with the matching installer script first. Only `k3s-bootstrap.sh` installs its cluster tool itself. Minikube uses Docker by default; configure another driver with `MINIKUBE_DRIVER`.
 
+The scripts are split into two directories:
+
+```text
+scripts/
+├── k8s-providers/   Install and bootstrap a local cluster (kind, minikube, k3s), plus versions.sh
+└── tools/           Install developer CLIs (ArgoCD CLI, pre-commit), plus version.sh
+```
+
+### `k8s-providers/`
+
 | Script | Purpose |
 | --- | --- |
-| `kind-install-linux.sh` | Install kind on Linux (amd64 or arm64), replacing any existing binary. |
-| `kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. |
-| `kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster, install ArgoCD, and print the admin password. |
-| `minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). Exits if minikube is already installed. |
-| `minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. Exits if minikube is already installed. |
-| `minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, install ArgoCD, and print the admin password. |
-| `k3s-install-linux.sh` | Install k3s on Linux with the official installer (kubeconfig at `/etc/rancher/k3s/k3s.yaml`). |
-| `k3s-install-mac.sh` | k3s is Linux-only, so install k3d (k3s in Docker) on macOS and create a `k3s-local` cluster. |
-| `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, install ArgoCD in the `argocd` namespace, and print the admin password. |
-| `argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
-| `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
+| `k8s-providers/kind-install-linux.sh` | Install kind on Linux (amd64 or arm64), replacing any existing binary. |
+| `k8s-providers/kind-install-mac.sh` | Install kind on Apple Silicon macOS, using Homebrew when available. |
+| `k8s-providers/kind-bootstrap.sh` | Create the `multiplayer-demo` kind cluster, install ArgoCD, and print the admin password. |
+| `k8s-providers/minikube-install-linux.sh` | Install minikube on Linux (amd64 or arm64). Exits if minikube is already installed. |
+| `k8s-providers/minikube-install-mac.sh` | Install minikube on Apple Silicon macOS, using Homebrew when available. Exits if minikube is already installed. |
+| `k8s-providers/minikube-bootstrap.sh` | Start the `multiplayer-demo` minikube profile with `MINIKUBE_DRIVER` (default: `docker`), 8 CPUs, and 12 GB of memory, install ArgoCD, and print the admin password. |
+| `k8s-providers/k3s-install-linux.sh` | Install k3s on Linux with the official installer (kubeconfig at `/etc/rancher/k3s/k3s.yaml`). |
+| `k8s-providers/k3s-install-mac.sh` | k3s is Linux-only, so install k3d (k3s in Docker) on macOS and create a `k3s-local` cluster. |
+| `k8s-providers/k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, install ArgoCD in the `argocd` namespace, and print the admin password. |
+| `k8s-providers/versions.sh` | Set the default ArgoCD chart, kind, k3s, and minikube versions and the minikube driver for the provider scripts. |
+
+### `tools/`
+
+| Script | Purpose |
+| --- | --- |
+| `tools/argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
+| `tools/argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
 | `tools/precommit-install.sh` | Install pre-commit on Linux or macOS (Homebrew, then pipx, then `pip --user`) and run `pre-commit install` for this repo. Skips the install if pre-commit is already on `PATH`. |
-| `versions.sh` | Set the default ArgoCD chart, ArgoCD CLI, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
+| `tools/version.sh` | Version defaults for the tool installers. |
 
 ## Quickstart
 
 Install, Run and setup ArgoCD, then run:
 
 ```bash
-./scripts/{name}-install-{platform}.sh
+./scripts/k8s-providers/{name}-install-{platform}.sh
 
-./scripts/{name}-bootstrap.sh
+./scripts/k8s-providers/{name}-bootstrap.sh
 
 kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
@@ -37,9 +53,9 @@ The bootstrap script installs ArgoCD chart v10.9.5 (ArgoCD v3.5.3) as release `a
 Install minikube with the script for your platform (both exit if minikube is already installed):
 
 ```bash
-./scripts/minikube-install-linux.sh  # Linux
+./scripts/k8s-providers/minikube-install-linux.sh  # Linux
 # Or, on Apple Silicon macOS:
-./scripts/minikube-install-mac.sh
+./scripts/k8s-providers/minikube-install-mac.sh
 ```
 
 Follow [Quickstart](#quickstart) for the initial cluster and ArgoCD setup. These everyday commands target the same `multiplayer-demo` profile:
@@ -68,12 +84,12 @@ See the [official minikube guide](https://minikube.sigs.k8s.io/docs/start/) for 
 If kind is missing, run the installer for your platform:
 
 ```bash
-./scripts/kind-install-linux.sh  # Linux
+./scripts/k8s-providers/kind-install-linux.sh  # Linux
 # Or, on Apple Silicon macOS:
-./scripts/kind-install-mac.sh
+./scripts/k8s-providers/kind-install-mac.sh
 ```
 
-Run `./scripts/kind-bootstrap.sh` for the initial cluster and ArgoCD setup, as in [Quickstart](#quickstart). The cluster name is `multiplayer-demo`; its Kubernetes context is `kind-multiplayer-demo`.
+Run `./scripts/k8s-providers/kind-bootstrap.sh` for the initial cluster and ArgoCD setup, as in [Quickstart](#quickstart). The cluster name is `multiplayer-demo`; its Kubernetes context is `kind-multiplayer-demo`.
 
 | Task | Command |
 | --- | --- |
@@ -100,13 +116,13 @@ See the [official kind quick start](https://kind.sigs.k8s.io/docs/user/quick-sta
 k3s runs natively only on Linux. On macOS the scripts use k3d, which runs k3s inside Docker (Docker Desktop, colima, or OrbStack). Bootstrap installs whatever is missing, then installs ArgoCD:
 
 ```bash
-./scripts/k3s-bootstrap.sh
+./scripts/k8s-providers/k3s-bootstrap.sh
 kubectl apply -f argocd/local/sync-all-groups.yaml
 ```
 
 On Linux, run `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml` before the `kubectl apply` if your kubeconfig does not already point at k3s. On macOS the installer switches the current context to `k3d-k3s-local`.
 
-To install without ArgoCD, run `./scripts/k3s-install-linux.sh` (Linux) or `./scripts/k3s-install-mac.sh` (macOS) directly. Both are safe to re-run.
+To install without ArgoCD, run `./scripts/k8s-providers/k3s-install-linux.sh` (Linux) or `./scripts/k8s-providers/k3s-install-mac.sh` (macOS) directly. Both are safe to re-run.
 
 | | Linux (k3s) | macOS (k3d) |
 | --- | --- | --- |
@@ -124,7 +140,7 @@ See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for mor
 
 ## Version and install options
 
-`scripts/versions.sh` sets these defaults. Override any of them in the command environment:
+`scripts/k8s-providers/versions.sh` sets these defaults. Override any of them in the command environment:
 
 | Variable | Default | Used by |
 | --- | --- | --- |
@@ -136,13 +152,13 @@ See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for mor
 | `MINIKUBE_DRIVER` | `docker` | `minikube-bootstrap.sh` |
 | `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | k3s installers |
 
-The chart version in `versions.sh` matches `argocd/local/infra/argo-cd.yaml`, which manages ArgoCD after the `infra-local` Application syncs. Change both together.
+The chart version in `k8s-providers/versions.sh` matches `argocd/local/infra/argo-cd.yaml`, which manages ArgoCD after the `infra-local` Application syncs. Change both together.
 
 Set `MINIKUBE_DRIVER` before bootstrapping to use another driver that is installed and configured on your machine. For example, to use Podman for bootstrap and subsequent quickstart commands in the same shell:
 
 ```bash
 export MINIKUBE_DRIVER=podman
-./scripts/minikube-bootstrap.sh
+./scripts/k8s-providers/minikube-bootstrap.sh
 ```
 
 Use the same driver when starting an existing profile.
@@ -151,7 +167,7 @@ The kind, minikube, and ArgoCD CLI installers accept `INSTALL_DIR` (default `/us
 
 ## ArgoCD Local Quickstart
 
-Reach the ArgoCD API server of the local cluster with a port-forward, then use the `argocd` CLI or the web UI. Install the CLI with `./scripts/argocd-cli-install-linux.sh` or `./scripts/argocd-cli-install-mac.sh`. Use a CLI version that matches the server, because a large version gap can make the login fail. The default chart runs ArgoCD v3.5.3, so pin the CLI with `ARGOCD_CLI_VERSION=v3.5.3` if `latest` has moved ahead. Check both with `argocd version`.
+Reach the ArgoCD API server of the local cluster with a port-forward, then use the `argocd` CLI or the web UI. Install the CLI with `./scripts/tools/argocd-cli-install-linux.sh` or `./scripts/tools/argocd-cli-install-mac.sh`. Use a CLI version that matches the server, because a large version gap can make the login fail. The default chart runs ArgoCD v3.5.3, so pin the CLI with `ARGOCD_CLI_VERSION=v3.5.3` if `latest` has moved ahead. Check both with `argocd version`.
 
 ### Connect
 
