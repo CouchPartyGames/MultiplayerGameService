@@ -45,7 +45,7 @@ Folder names organize the repository; each manifest's project and destination fi
 
 Versions above are the pins in this repository, not a claim that the upstream charts have been rendered or tested together. The allocator certificate creates `allocator-tls` in `agones-system` for `127.0.0.1`, using the `selfsigned` ClusterIssuer, so it needs cert-manager and the Agones namespace.
 
-The `infra` directory also manages ArgoCD itself: its `argo-cd` Application installs chart `10.9.5` as release `argo-cd` in `argocd`, the same release the bootstrap scripts create. Keep its version aligned with `ARGO_CD_CHART_VERSION` in `scripts/versions.sh`.
+The `infra` directory also manages ArgoCD itself: its `argo-cd` Application installs chart `10.9.5` as release `argo-cd` in `argocd`, the same release the bootstrap scripts create. Keep its version aligned with `ARGO_CD_CHART_VERSION` in `scripts/k8s-providers/versions.sh`.
 
 ## How local synchronization works
 
@@ -72,9 +72,9 @@ The `infra` AppProject has sync wave `-1`, so it is created before its Applicati
 Run from the repository root with a working container runtime, Helm, kubectl, and minikube, kind, or k3s. The [bootstrap scripts](../scripts/README.md) create a cluster and install ArgoCD:
 
 ```bash
-./scripts/minikube-bootstrap.sh
-# Or: ./scripts/kind-bootstrap.sh
-# Or: ./scripts/k3s-bootstrap.sh
+./scripts/k8s-providers/minikube-bootstrap.sh
+# Or: ./scripts/k8s-providers/kind-bootstrap.sh
+# Or: ./scripts/k8s-providers/k3s-bootstrap.sh
 ```
 
 1. Register this repository's SSH URL in ArgoCD, as described in the [scripts README](../scripts/README.md#add-the-git-repository).

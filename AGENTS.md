@@ -6,7 +6,7 @@ This repository contains Kubernetes infrastructure for a multiplayer game demo, 
 
 ## Build, Test, and Development Commands
 
-- `./scripts/minikube-bootstrap.sh` starts the local `multiplayer-demo` minikube profile (8 CPUs, 12 GB RAM) and installs ArgoCD. `scripts/README.md` covers the kind and k3s alternatives.
+- `./scripts/k8s-providers/minikube-bootstrap.sh` starts the local `multiplayer-demo` minikube profile (8 CPUs, 12 GB RAM) and installs ArgoCD. `scripts/README.md` covers the kind and k3s alternatives.
 - `kubectl apply -f argocd/local/sync-all-groups.yaml` registers the local applications.
 - `helm template <release> <repo>/<chart> --version <targetRevision> -f helm/external-values/<env>/<area>/<app>-<env>.yaml` renders a chart with changed values. Use the version pinned in its ArgoCD manifest.
 - `kubectl apply --dry-run=server -f <manifest.yaml>` validates Kubernetes manifests against a cluster with the required CRDs.
