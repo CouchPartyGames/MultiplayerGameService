@@ -24,7 +24,7 @@ jobs:
 
       - id: version
         run: |
-          source terraform/version.sh
+          source terraform/scripts/version.sh
           echo "terraform=$TERRAFORM_VERSION" >> "$GITHUB_OUTPUT"
 
       - uses: hashicorp/setup-terraform@v3
@@ -49,7 +49,7 @@ jobs:
       - id: version
         working-directory: .
         run: |
-          source terraform/version.sh
+          source terraform/scripts/version.sh
           echo "terraform=$TERRAFORM_VERSION" >> "$GITHUB_OUTPUT"
 
       - uses: hashicorp/setup-terraform@v3

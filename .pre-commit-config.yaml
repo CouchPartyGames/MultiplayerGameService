@@ -1,6 +1,6 @@
 # Pre-commit hooks (https://pre-commit.com). Install once per clone with `pre-commit install`.
 # The Terraform hooks call the local `terraform` binary; install it with
-# terraform/terraform-install-linux.sh or terraform/terraform-install-mac.sh.
+# terraform/scripts/terraform-install-linux.sh or terraform/scripts/terraform-install-mac.sh.
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.109.2
@@ -11,6 +11,7 @@ repos:
         args:
           - --args=-check
           - --args=-diff
+
       # Runs `terraform init -backend=false` when needed, then `terraform validate`,
       # in each directory under terraform/ with changed .tf files.
       - id: terraform_validate

@@ -14,7 +14,7 @@ Infrastructure/GitOps config for a multiplayer game backend demo built on **Agon
 - Chart versions are pinned in the Application/ApplicationSet `targetRevision`, not in values files.
 - `argocd/local/infra/argo-cd.yaml` manages the ArgoCD install itself (release `argo-cd`, the same one the bootstrap scripts create). Change its `targetRevision` together with `ARGO_CD_CHART_VERSION` in `scripts/versions.sh`.
 - `scripts/` holds the imperative steps that run outside ArgoCD: cluster bootstrap for minikube, kind, and k3s (each installs ArgoCD via Helm), CLI installers, and shared version defaults in `versions.sh`. `scripts/README.md` documents them and the ArgoCD CLI workflow.
-- `terraform/` holds separate GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations and Terraform installers. Nothing in `argocd/` targets those clusters yet.
+- `terraform/` holds separate GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations, plus Terraform and Atlantis installers in `terraform/scripts/` (versions in `terraform/scripts/version.sh`). Nothing in `argocd/` targets those clusters yet.
 
 ## Environments
 

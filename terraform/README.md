@@ -1,13 +1,13 @@
 # Terraform
 
-This directory contains Terraform installation scripts and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
+This directory contains Terraform and Atlantis installation scripts in `scripts/` and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
 
 ## Install Terraform
 
 On Linux (amd64 or arm64), install `curl`, `unzip`, and `sha256sum`, then run:
 
 ```bash
-./terraform/terraform-install-linux.sh
+./terraform/scripts/terraform-install-linux.sh
 ```
 
 The Linux script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory.
@@ -15,13 +15,13 @@ The Linux script downloads Terraform from HashiCorp, checks the archive against 
 On macOS, install Homebrew first, then run:
 
 ```bash
-./terraform/terraform-install-mac.sh
+./terraform/scripts/terraform-install-mac.sh
 ```
 
-The macOS script installs Terraform from the official HashiCorp Homebrew tap. Both installers source `version.sh`. Its `TERRAFORM_VERSION` default controls the Linux download; Homebrew selects the macOS formula version. Override the Linux version for one run with:
+The macOS script installs Terraform from the official HashiCorp Homebrew tap. Both installers source `scripts/version.sh`. Its `TERRAFORM_VERSION` default controls the Linux download; Homebrew selects the macOS formula version. Override the Linux version for one run with:
 
 ```bash
-TERRAFORM_VERSION=1.16.4 ./terraform/terraform-install-linux.sh
+TERRAFORM_VERSION=1.16.4 ./terraform/scripts/terraform-install-linux.sh
 ```
 
 Check the installed version with `terraform version`.
@@ -31,13 +31,13 @@ Check the installed version with `terraform version`.
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/atlantis-install.sh
+./terraform/scripts/atlantis-install.sh
 ```
 
-The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `version.sh`; override it for one run with:
+The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `scripts/version.sh`; override it for one run with:
 
 ```bash
-ATLANTIS_VERSION=0.48.1 ./terraform/atlantis-install.sh
+ATLANTIS_VERSION=0.48.1 ./terraform/scripts/atlantis-install.sh
 ```
 
 ## Terraform skill for AI agents
