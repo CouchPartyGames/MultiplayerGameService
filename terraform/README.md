@@ -1,27 +1,19 @@
 # Terraform
 
-This directory contains Terraform installation scripts and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
+This directory contains Terraform and Atlantis installation scripts in `scripts/` and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
 
 ## Install Terraform
 
-On Linux (amd64 or arm64), install `curl`, `unzip`, and `sha256sum`, then run:
+On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/terraform-install-linux.sh
+./terraform/scripts/terraform-install.sh
 ```
 
-The Linux script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory.
-
-On macOS, install Homebrew first, then run:
+The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TERRAFORM_VERSION` in `scripts/version.sh`; override it for one run with:
 
 ```bash
-./terraform/terraform-install-mac.sh
-```
-
-The macOS script installs Terraform from the official HashiCorp Homebrew tap. Both installers source `version.sh`. Its `TERRAFORM_VERSION` default controls the Linux download; Homebrew selects the macOS formula version. Override the Linux version for one run with:
-
-```bash
-TERRAFORM_VERSION=1.16.4 ./terraform/terraform-install-linux.sh
+TERRAFORM_VERSION=1.16.4 ./terraform/scripts/terraform-install.sh
 ```
 
 Check the installed version with `terraform version`.
@@ -31,13 +23,83 @@ Check the installed version with `terraform version`.
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/atlantis-install.sh
+./terraform/scripts/atlantis-install.sh
 ```
 
-The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `version.sh`; override it for one run with:
+The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `scripts/version.sh`; override it for one run with:
 
 ```bash
-ATLANTIS_VERSION=0.48.1 ./terraform/atlantis-install.sh
+ATLANTIS_VERSION=0.48.1 ./terraform/scripts/atlantis-install.sh
+```
+
+## Install TFLint
+
+On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
+
+```bash
+./terraform/scripts/tflint-install.sh
+```
+
+The script downloads TFLint from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TFLINT_VERSION` in `scripts/version.sh`, which matches the `tflint_version` in `.github/workflows/terraform.yaml`; keep the two in step. Override it for one run with:
+
+```bash
+TFLINT_VERSION=0.64.0 ./terraform/scripts/tflint-install.sh
+```
+
+## Lint with TFLint
+
+TFLint catches problems that `terraform validate` does not, such as unused variables and outputs, deprecated syntax, missing `required_providers` version constraints, and naming issues. The shared config is `.tflint.hcl` at the repository root. It enables the bundled `terraform` ruleset with the `recommended` preset, and the AWS, Azure, and GCP configurations all use it.
+
+Run these commands from the repository root. Pass the config as an absolute path: TFLint resolves `--config` relative to the directory it lints, so a relative path breaks with `--chdir`.
+
+1. Install the plugins the config lists. Run this once, and again after you change the `plugin` blocks in `.tflint.hcl`:
+
+   ```bash
+   tflint --init --config="$PWD/.tflint.hcl"
+   ```
+
+2. Lint one configuration, the same way CI does:
+
+   ```bash
+   tflint --chdir=terraform/aws --config="$PWD/.tflint.hcl" --format=compact
+   ```
+
+   Replace `terraform/aws` with `terraform/azure` or `terraform/gcp` for the others.
+
+3. Or lint every configuration in one run:
+
+   ```bash
+   tflint --recursive --config="$PWD/.tflint.hcl" --format=compact
+   ```
+
+TFLint exits non-zero when it finds an issue and prints each one as `file:line:col: severity - message (rule_name)`. To fix it:
+
+- Correct the code. Some rules can fix themselves: add `--fix` to the command to apply those changes, then review the diff.
+- If the finding is a false positive, silence that one line with a comment on the line above it, naming the rule:
+
+  ```hcl
+  # tflint-ignore: terraform_unused_declarations
+  variable "reserved_for_later" {
+    type = string
+  }
+  ```
+
+- To turn a rule off everywhere, add a `rule` block to `.tflint.hcl`, for example `rule "terraform_unused_declarations" { enabled = false }`. This affects every configuration, so prefer a line-level ignore.
+
+The `tflint` job in `.github/workflows/terraform.yaml` lints `terraform/aws`, `terraform/azure`, and `terraform/gcp` on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job, so run TFLint locally before you push. TFLint is not a pre-commit hook yet.
+
+The config does not yet include the provider rulesets (`tflint-ruleset-aws`, `tflint-ruleset-azurerm`, `tflint-ruleset-google`), which check things like invalid instance types and regions. To add one, add a `plugin` block with its `source` and `version` to `.tflint.hcl` and run `tflint --init` again. CI passes `GITHUB_TOKEN` to `tflint --init` so plugin downloads from GitHub are not rate-limited.
+
+## Terraform skill for AI agents
+
+The repository includes Anton Babenko's [terraform-skill](https://github.com/antonbabenko/terraform-skill), an agent skill with Terraform and OpenTofu guidance for writing, reviewing, and debugging modules, tests, CI, security scans, and state operations. The skill files live in `.agents/skills/terraform-skill/`, `.claude/skills/terraform-skill` links to them for Claude Code, and `skills-lock.json` records the source and content hash.
+
+Claude Code loads the skill automatically when a task involves Terraform. You can also invoke it directly with `/terraform-skill`. With the skill loaded, the agent states its version and backend assumptions, names the risk it addresses, gives validation commands such as `terraform fmt -check`, `terraform validate`, and `terraform plan -out`, and includes rollback notes for state-changing work. It will not run `terraform destroy` until it has shown a `terraform plan -destroy` and received confirmation.
+
+To install the skill in another checkout or update it to the latest release, run:
+
+```bash
+npx skills add antonbabenko/terraform-skill
 ```
 
 ## GCP configuration

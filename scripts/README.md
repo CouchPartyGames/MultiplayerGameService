@@ -15,6 +15,7 @@ Run these commands from the repository root. The bootstrap scripts need Helm, `k
 | `k3s-bootstrap.sh` | Install k3s (or the k3d cluster on macOS) if missing, install ArgoCD in the `argocd` namespace, and print the admin password. |
 | `argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
 | `argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
+| `tools/precommit-install.sh` | Install pre-commit on Linux or macOS (Homebrew, then pipx, then `pip --user`) and run `pre-commit install` for this repo. Skips the install if pre-commit is already on `PATH`. |
 | `versions.sh` | Set the default ArgoCD chart, ArgoCD CLI, kind, k3s, and minikube versions and the minikube driver for the other scripts. |
 
 ## Quickstart
@@ -131,6 +132,7 @@ See the [k3s docs](https://docs.k3s.io/) and [k3d docs](https://k3d.io/) for mor
 | `ARGOCD_CLI_VERSION` | `latest` | ArgoCD CLI installers |
 | `KIND_VERSION` | `v0.27.0` | kind installers |
 | `MINIKUBE_VERSION` | `latest` | minikube installers |
+| `PRE_COMMIT_VERSION` | `latest` | `tools/precommit-install.sh` (Homebrew only for `latest`) |
 | `MINIKUBE_DRIVER` | `docker` | `minikube-bootstrap.sh` |
 | `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | k3s installers |
 

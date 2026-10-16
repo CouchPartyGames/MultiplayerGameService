@@ -16,9 +16,10 @@ spec:
     - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
       targetRevision: main
       ref: myRepo
+
     - chart: atlantis
       repoURL: https://runatlantis.github.io/helm-charts
-      # Chart 6.16.1 ships Atlantis v0.48.1, matching ATLANTIS_VERSION in terraform/version.sh.
+      # Chart 6.16.1 ships Atlantis v0.48.1, matching ATLANTIS_VERSION in terraform/scripts/version.sh.
       targetRevision: 6.16.1
       helm:
         valueFiles:
