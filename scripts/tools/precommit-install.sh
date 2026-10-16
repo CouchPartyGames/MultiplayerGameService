@@ -2,12 +2,12 @@
 # Installs pre-commit (https://pre-commit.com) on Linux or macOS, then installs
 # the git hook for this repo's .pre-commit-config.yaml.
 # Uses Homebrew on macOS when available, otherwise pipx, otherwise pip --user.
-# Override the version with PRE_COMMIT_VERSION=X.Y.Z (default set in versions.sh;
+# Override the version with PRE_COMMIT_VERSION=X.Y.Z (default set in version.sh;
 # Homebrew is only used for "latest").
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../versions.sh"
+source "${SCRIPT_DIR}/version.sh"
 VERSION="$PRE_COMMIT_VERSION"
 
 case "$(uname -s)" in
