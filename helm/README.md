@@ -33,6 +33,13 @@ HELM_VERSION=v3.16.2 ./helm/scripts/helm-install.sh
 INSTALL_DIR="$HOME/.local/bin" ./helm/scripts/helm-install.sh
 ```
 
+The `helm` GitHub workflow (`.github/workflows/helm.yaml`) runs [chart-testing](https://github.com/helm/chart-testing) on charts under `helm/charts/` that a pull request changes: `ct lint` (yamllint, Chart.yaml schema, `helm lint`, and a chart version bump check), then `ct install` into a kind cluster. On pushes to `main` it tests every chart. Its settings are in `ct.yaml` at the repository root. To run the lint step locally:
+
+```bash
+docker run --rm -v "$PWD:/repo" -w /repo quay.io/helmpack/chart-testing:v3.15.0 \
+  sh -c 'git config --global --add safe.directory /repo && ct lint --config ct.yaml --all'
+```
+
 The default `latest` resolves to the newest Helm release when the script runs. To give everyone the same version, set a fixed release in `version.sh`.
 
 ## Quickstart

@@ -1,0 +1,8 @@
+---
+# chart-testing (ct) config, read by .github/workflows/helm.yaml.
+# https://github.com/helm/chart-testing/blob/main/doc/ct_lint.md
+chart-dirs:
+  - helm/charts
+target-branch: main
+# Charts here are local test charts with no maintainers to validate against GitHub.
+validate-maintainers: false
