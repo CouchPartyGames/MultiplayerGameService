@@ -4,25 +4,19 @@ This directory contains Terraform and Atlantis installation scripts in `scripts/
 
 ## Install Terraform
 
-On Linux (amd64 or arm64), install `curl`, `unzip`, and `sha256sum`, then run:
+On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/scripts/terraform-install-linux.sh
+./terraform/scripts/terraform-install.sh
 ```
 
-The Linux script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory.
-
-On macOS, install Homebrew first, then run:
+The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TERRAFORM_VERSION` in `scripts/version.sh`; override it for one run with:
 
 ```bash
-./terraform/scripts/terraform-install-mac.sh
+TERRAFORM_VERSION=1.16.4 ./terraform/scripts/terraform-install.sh
 ```
 
-The macOS script installs Terraform from the official HashiCorp Homebrew tap. Both installers source `scripts/version.sh`. Its `TERRAFORM_VERSION` default controls the Linux download; Homebrew selects the macOS formula version. Override the Linux version for one run with:
-
-```bash
-TERRAFORM_VERSION=1.16.4 ./terraform/scripts/terraform-install-linux.sh
-```
+The older `terraform-install-linux.sh` and `terraform-install-mac.sh` scripts still work. The macOS one installs from the HashiCorp Homebrew tap and ignores `TERRAFORM_VERSION`.
 
 Check the installed version with `terraform version`.
 
