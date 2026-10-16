@@ -38,3 +38,23 @@ repos:
         entry: helm/scripts/helm-lint.sh
         language: script
         files: ^helm/charts/
+
+      # Runs `ct lint` (yamllint, Chart.yaml schema, helm lint, version bump check)
+      # on charts changed against main, the same check as CI. Needs Docker.
+      - id: ct-lint
+        name: chart-testing lint
+        entry: helm/scripts/ct.sh lint
+        language: script
+        files: ^(helm/charts/|ct\.yaml$)
+        pass_filenames: false
+
+      # Installs changed charts into the current kube context and runs their tests.
+      # Manual only: `pre-commit run ct-install --hook-stage manual`. Needs Docker
+      # and a running local cluster.
+      - id: ct-install
+        name: chart-testing install
+        entry: helm/scripts/ct.sh install
+        language: script
+        files: ^(helm/charts/|ct\.yaml$)
+        pass_filenames: false
+        stages: [manual]

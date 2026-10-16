@@ -19,8 +19,9 @@ Run these from the repository root.
 | Script | Purpose |
 | --- | --- |
 | `scripts/helm-install.sh` | Install the Helm CLI on Linux or macOS (amd64 or arm64) from `get.helm.sh`. It verifies the download's SHA-256 checksum, installs to `INSTALL_DIR` (default: `/usr/local/bin`), and uses `sudo` only if that directory is not writable. |
-| `scripts/version.sh` | Set the default `HELM_VERSION` (`latest`, or a release such as `v3.16.2`). |
+| `scripts/version.sh` | Set the default `HELM_VERSION` (`latest`, or a release such as `v3.16.2`) and `CT_VERSION`, the chart-testing version used by `ct.sh` and CI. |
 | `scripts/helm-lint.sh` | Run `helm lint --strict` on each chart under `helm/charts/` that contains one of the given files, or on every chart when given none. The `helm-lint` pre-commit hook runs it on staged chart files. |
+| `scripts/ct.sh` | Run [chart-testing](https://github.com/helm/chart-testing) from its Docker image with `ct.yaml`: `ct.sh lint`, or `ct.sh install` to install changed charts into the current kube context and run their tests. Extra arguments go to `ct` (for example `--all`). The `ct-lint` pre-commit hook runs `ct.sh lint`; `ct-install` runs only on demand with `pre-commit run ct-install --hook-stage manual`. |
 
 ```bash
 # Install the version set in version.sh
@@ -33,12 +34,7 @@ HELM_VERSION=v3.16.2 ./helm/scripts/helm-install.sh
 INSTALL_DIR="$HOME/.local/bin" ./helm/scripts/helm-install.sh
 ```
 
-The `helm` GitHub workflow (`.github/workflows/helm.yaml`) runs [chart-testing](https://github.com/helm/chart-testing) on charts under `helm/charts/` that a pull request changes: `ct lint` (yamllint, Chart.yaml schema, `helm lint`, and a chart version bump check), then `ct install` into a kind cluster. On pushes to `main` it tests every chart. Its settings are in `ct.yaml` at the repository root. To run the lint step locally:
-
-```bash
-docker run --rm -v "$PWD:/repo" -w /repo quay.io/helmpack/chart-testing:v3.15.0 \
-  sh -c 'git config --global --add safe.directory /repo && ct lint --config ct.yaml --all'
-```
+The `helm` GitHub workflow (`.github/workflows/helm.yaml`) runs [chart-testing](https://github.com/helm/chart-testing) on charts under `helm/charts/` that a pull request changes: `ct lint` (yamllint, Chart.yaml schema, `helm lint`, and a chart version bump check), then `ct install` into a kind cluster. On pushes to `main` it tests every chart. Its settings are in `ct.yaml` at the repository root. Run the same steps locally with `helm/scripts/ct.sh lint` and `helm/scripts/ct.sh install`.
 
 The default `latest` resolves to the newest Helm release when the script runs. To give everyone the same version, set a fixed release in `version.sh`.
 
