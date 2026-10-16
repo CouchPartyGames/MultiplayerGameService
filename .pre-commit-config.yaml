@@ -50,11 +50,11 @@ repos:
         pass_filenames: false
 
       # Installs changed charts into the current kube context and runs their tests.
-      # Manual only: `pre-commit run ct-install --hook-stage manual`. Needs Docker
-      # and a running local cluster.
+      # Manual only: `pre-commit run ct-install --hook-stage manual`. Calls the local
+      # `ct`, `helm`, and `kubectl`, and needs a running local cluster.
       - id: ct-install
         name: chart-testing install
-        entry: helm/scripts/ct.sh install
+        entry: helm/scripts/ct-test.sh
         language: script
         files: ^(helm/charts/|ct\.yaml$)
         pass_filenames: false

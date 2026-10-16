@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs chart-testing (ct, https://github.com/helm/chart-testing) on Linux or
-# macOS from the official GitHub release, verifying its SHA-256 checksum, so ct
-# can run without Docker (helm/scripts/ct.sh runs it from the Docker image).
+# macOS from the official GitHub release, verifying its SHA-256 checksum, for
+# helm/scripts/ct-lint.sh and ct-test.sh.
 #
 # Installs:
 #   - ct to INSTALL_DIR (default: /usr/local/bin; sudo only if not writable)
@@ -9,7 +9,7 @@
 #   - yamllint and yamale, which `ct lint` calls, if missing (pipx, else pip --user)
 #
 # Override the version with CT_VERSION=vX.Y.Z (default set in
-# helm/scripts/version.sh, shared with ct.sh and CI; the leading "v" is optional).
+# helm/scripts/version.sh, shared with CI; the leading "v" is optional).
 # ct also needs helm and, for `ct install`, kubectl on PATH.
 set -euo pipefail
 
