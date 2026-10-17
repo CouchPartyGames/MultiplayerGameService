@@ -86,9 +86,45 @@ TFLint exits non-zero when it finds an issue and prints each one as `file:line:c
 
 - To turn a rule off everywhere, add a `rule` block to `.tflint.hcl`, for example `rule "terraform_unused_declarations" { enabled = false }`. This affects every configuration, so prefer a line-level ignore.
 
-The `tflint` job in `.github/workflows/terraform.yaml` lints `terraform/aws`, `terraform/azure`, and `terraform/gcp` on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job, so run TFLint locally before you push. TFLint is not a pre-commit hook yet.
+The `tflint` job in `.github/workflows/terraform.yaml` lints `terraform/aws`, `terraform/azure`, and `terraform/gcp` on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job. The `terraform_tflint` pre-commit hook runs the same check on commit (see [Pre-commit hooks](#pre-commit-hooks)).
 
 The config does not yet include the provider rulesets (`tflint-ruleset-aws`, `tflint-ruleset-azurerm`, `tflint-ruleset-google`), which check things like invalid instance types and regions. To add one, add a `plugin` block with its `source` and `version` to `.tflint.hcl` and run `tflint --init` again. CI passes `GITHUB_TOKEN` to `tflint --init` so plugin downloads from GitHub are not rate-limited.
+
+## Unit tests
+
+Each configuration has unit tests in `<cloud>/tests/unit.tftest.hcl`, run by Terraform's native test framework. They use mock providers, so they need no cloud credentials and create no resources. Each `run` block plans the configuration and checks derived values, such as subnet ranges, the AKS DNS address, and the optional Agones firewall rule. Other runs pass bad inputs and expect the variable validations to reject them.
+
+Run one configuration's tests from the repository root:
+
+```bash
+terraform -chdir=terraform/aws init -backend=false
+terraform -chdir=terraform/aws test
+```
+
+Or run every configuration's tests, initializing any that need it:
+
+```bash
+./terraform/scripts/terraform-test.sh
+```
+
+When you change a variable validation or the logic behind a derived value, add or update the matching `run` block.
+
+## Pre-commit hooks
+
+`.pre-commit-config.yaml` runs four hooks on commits that touch `terraform/`, each in the directories with changed files:
+
+| Hook | Check |
+|------|-------|
+| `terraform_tflint` | TFLint with the shared `.tflint.hcl` |
+| `terraform_fmt` | `terraform fmt -check -diff`; fails on unformatted `.tf` or `.tftest.hcl` files. Run `terraform fmt -recursive terraform` to fix them. |
+| `terraform_validate` | `terraform init -backend=false` when needed, then `terraform validate` |
+| `terraform-test` | `terraform test` via `scripts/terraform-test.sh` |
+
+Install Terraform and TFLint with the scripts above, then install the hooks once per clone with `pre-commit install`. To run them without committing:
+
+```bash
+pre-commit run --files $(git ls-files terraform)
+```
 
 ## Terraform skill for AI agents
 

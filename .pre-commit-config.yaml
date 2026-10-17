@@ -1,11 +1,19 @@
 # Pre-commit hooks (https://pre-commit.com). Install once per clone with `pre-commit install`.
-# The Terraform hooks call the local `terraform` binary; install it with
-# terraform/scripts/terraform-install.sh.
+# The Terraform hooks call the local `terraform` and `tflint` binaries; install them with
+# terraform/scripts/terraform-install.sh and terraform/scripts/tflint-install.sh.
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.109.2
     hooks:
-      # Fails when any .tf file is not in canonical format (same check as CI's `terraform fmt -check`).
+      # Lints each directory under terraform/ with changed .tf files using the shared
+      # .tflint.hcl (same check as CI's tflint job). The hook runs `tflint --init` itself.
+      - id: terraform_tflint
+        files: ^terraform/
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+          - --args=--format=compact
+
+      # Fails when any .tf or .tftest.hcl file is not in canonical format (same check as CI's `terraform fmt -check`).
       - id: terraform_fmt
         files: ^terraform/
         args:
@@ -31,6 +39,14 @@ repos:
 
   - repo: local
     hooks:
+      # Runs `terraform test` (mock-provider unit tests in tests/*.tftest.hcl) in each
+      # configuration under terraform/ with changed files. Needs no cloud credentials.
+      - id: terraform-test
+        name: terraform test
+        entry: terraform/scripts/terraform-test.sh
+        language: script
+        files: ^terraform/[^/]+/.*\.(tf|tftest\.hcl)$
+
       # Runs `helm lint --strict` on each chart under helm/charts/ with changed files.
       # Calls the local `helm` binary; install it with helm/scripts/helm-install.sh.
       - id: helm-lint
