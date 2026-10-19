@@ -1,5 +1,5 @@
 ---
-# 
+#
 # https://cert-manager.io/docs/configuration/acme/
 
 apiVersion: cert-manager.io/v1

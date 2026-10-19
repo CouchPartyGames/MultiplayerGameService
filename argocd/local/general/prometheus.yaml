@@ -25,7 +25,7 @@ spec:
   destination:
     name: in-cluster
     namespace: monitoring
-    
+
 
   syncPolicy:
     automated:
@@ -61,7 +61,7 @@ spec:
   destination:
     name: in-cluster
     namespace: monitoring
-    
+
 
   syncPolicy:
     automated:
@@ -71,4 +71,3 @@ spec:
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
       - ServerSideApply=true
-

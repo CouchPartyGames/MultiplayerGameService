@@ -5,43 +5,43 @@ metadata:
   name: games
   namespace: argocd
 
+  # finalizers:
+  #   - resources-finalizer.argocd.argoproj.io
+
   labels:
     environment: local
     region: local
-
-  #finalizers:
-  #  - resources-finalizer.argocd.argoproj.io
 spec:
   description: Dedicated Game Hosting for Local Environment
 
   sourceRepos:
-  - 'https://couchpartygames.github.io/cpg-helm'
-  - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
+    - 'https://couchpartygames.github.io/cpg-helm'
+    - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
 
   destinations:
-  - namespace: '!agones-system'
-    name: '*'
-  - namespace: '!kube-system'
-    name: '*'
-  - namespace: '*'
-    name: '*'
+    - namespace: '!agones-system'
+      name: '*'
+    - namespace: '!kube-system'
+      name: '*'
+    - namespace: '*'
+      name: '*'
 
   clusterResourceWhitelist:
-  #- group: 'agones.dev'
-  #  kind: 'Fleet'
-  #- group: 'autoscaling.agones.dev'
-  #  kind: 'FleetAutoscaler'
-  #- group: 'apps'
-  #  kind: 'Service'
-  #- group: 'apps'
-  #  kind: 'Deployment'
-  #- group: ''
-  #  kind: 'NetworkPolicy'
-  - group: '*'
-    kind: '*'
+    # - group: 'agones.dev'
+    #   kind: 'Fleet'
+    # - group: 'autoscaling.agones.dev'
+    #   kind: 'FleetAutoscaler'
+    # - group: 'apps'
+    #   kind: 'Service'
+    # - group: 'apps'
+    #   kind: 'Deployment'
+    # - group: ''
+    #   kind: 'NetworkPolicy'
+    - group: '*'
+      kind: '*'
 
   namespaceResourceWhitelist:
-  - group: '*'
-    kind: '*'
-  #- group: 'agones.dev'
-  #  kind: 'Fleet'
+    # - group: 'agones.dev'
+    #   kind: 'Fleet'
+    - group: '*'
+      kind: '*'

@@ -21,7 +21,7 @@ spec:
   destination:
     name: in-cluster
     namespace: monitoring
-    
+
 
   syncPolicy:
     automated:

@@ -109,7 +109,6 @@ These findings come from inspecting the checked-in manifests, parsing them, and 
 | Missing values | `components.yaml` references `helm/external-values/local/open-match-components-local.yaml`, which does not exist. |
 | Repository permissions | `matchmaking-local` does not allow `https://couchpartygames.github.io/helm-charts`, the custom components chart repository. |
 | Agones sync | Automatic sync is commented out on `agones-local` without the explanatory comment the standard requires, so `simple-game-server` fails until someone syncs Agones. |
-| Formatting | `games-orchestrator/project.yaml` has tabs before an inline comment. kubectl accepts it, but strict YAML parsers such as PyYAML reject it, and the coding standard forbids tabs. |
 | Standard drift | Values files outside `infra` and `games-orchestrator` still sit directly in `helm/external-values/local/` instead of an area subdirectory. The `games` and `hosting-local` project names predate the `<area>-<env>` rule in [CODING-STANDARD.md](CODING-STANDARD.md). |
 
 ## Setup conventions

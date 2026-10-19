@@ -13,15 +13,15 @@ spec:
   project: default
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
-    targetRevision: main 
-    ref: myRepo
-  - repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 1.7.2
-    chart: tempo
-    helm:
-      valueFiles: 
-      - $myRepo/helm/external-values/local/tempo-local.yaml
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
+      targetRevision: main
+      ref: myRepo
+    - repoURL: https://grafana.github.io/helm-charts
+      targetRevision: 1.7.2
+      chart: tempo
+      helm:
+        valueFiles:
+          - $myRepo/helm/external-values/local/tempo-local.yaml
 
   destination:
     name: in-cluster
