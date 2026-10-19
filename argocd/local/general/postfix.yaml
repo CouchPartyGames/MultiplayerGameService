@@ -13,15 +13,15 @@ spec:
   project: default
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
-    targetRevision: main 
-    ref: myRepo
-  - repoURL: https://bokysan.github.io/docker-postfix/
-    targetRevision: 3.5.1
-    chart: mail
-    helm:
-      valueFiles: 
-      - $myRepo/helm/external-values/local/postfix-local.yaml
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
+      targetRevision: main
+      ref: myRepo
+    - repoURL: https://bokysan.github.io/docker-postfix/
+      targetRevision: 3.5.1
+      chart: mail
+      helm:
+        valueFiles:
+          - $myRepo/helm/external-values/local/postfix-local.yaml
 
   destination:
     name: in-cluster

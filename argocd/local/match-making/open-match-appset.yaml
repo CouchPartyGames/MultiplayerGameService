@@ -9,11 +9,11 @@ metadata:
     environment: local
 spec:
   generators:
-  - list: 
-      elements: 
-      - cluster: "in-cluster"
-        region: "local"
-        version: "1.8.1"
+    - list:
+        elements:
+          - cluster: "in-cluster"
+            region: "local"
+            version: "1.8.1"
   template:
     metadata:
       name: 'open-match-{{region}}'

@@ -11,15 +11,15 @@ spec:
   project: matchmaking-local
 
   sources:
-  - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
-    targetRevision: main 
-    ref: myRepo
-  - chart: open-match-components
-    repoURL: https://couchpartygames.github.io/helm-charts
-    targetRevision: 0.0.3
-    helm:
-      valueFiles:
-      - $myRepo/helm/external-values/local/open-match-components-local.yaml
+    - repoURL: git@github.com:CouchPartyGames/MultiplayerGameService.git
+      targetRevision: main
+      ref: myRepo
+    - chart: open-match-components
+      repoURL: https://couchpartygames.github.io/helm-charts
+      targetRevision: 0.0.3
+      helm:
+        valueFiles:
+          - $myRepo/helm/external-values/local/open-match-components-local.yaml
 
   destination:
     name: in-cluster

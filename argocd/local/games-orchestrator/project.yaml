@@ -14,23 +14,23 @@ spec:
   description: Dedicated Game Hosting for Local Environment
 
   sourceRepos:
-  - 'https://agones.dev/chart/stable'
-  - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
+    - 'https://agones.dev/chart/stable'
+    - 'git@github.com:CouchPartyGames/MultiplayerGameService.git'
 
   destinations:
-  - namespace: agones-system
-    name: in-cluster
-  - namespace: default
-    name: in-cluster
-  - namespace: kube-system
-    name: in-cluster
-  - namespace: '*'			# allow games to be hosted in any namespace, argocd needs access
-    name: '*'
+    - namespace: agones-system
+      name: in-cluster
+    - namespace: default
+      name: in-cluster
+    - namespace: kube-system
+      name: in-cluster
+    - namespace: '*'  # allow games to be hosted in any namespace, argocd needs access
+      name: '*'
 
   clusterResourceWhitelist:
-  - group: '*'
-    kind: '*'
+    - group: '*'
+      kind: '*'
 
   namespaceResourceWhitelist:
-  - group: '*'
-    kind: '*'
+    - group: '*'
+      kind: '*'
