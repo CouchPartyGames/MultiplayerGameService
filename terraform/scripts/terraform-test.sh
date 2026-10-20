@@ -6,7 +6,7 @@
 set -euo pipefail
 
 if ! command -v terraform >/dev/null 2>&1; then
-  echo "terraform not found; install it with terraform/scripts/terraform-install.sh" >&2
+  echo "terraform not found; install it with terraform/tools/terraform-install.sh" >&2
   exit 1
 fi
 

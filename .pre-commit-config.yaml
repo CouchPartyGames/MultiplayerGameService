@@ -1,6 +1,6 @@
 # Pre-commit hooks (https://pre-commit.com). Install once per clone with `pre-commit install`.
 # The Terraform hooks call the local `terraform` and `tflint` binaries; install them with
-# terraform/scripts/terraform-install.sh and terraform/scripts/tflint-install.sh.
+# terraform/tools/terraform-install.sh and terraform/tools/tflint-install.sh.
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.109.2

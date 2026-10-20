@@ -10,7 +10,7 @@ projects:
   - name: aws
     dir: terraform/envs/aws-123456789012
     workspace: default
-    # Keep in sync with TERRAFORM_VERSION in terraform/scripts/version.sh.
+    # Keep in sync with TERRAFORM_VERSION in terraform/tools/version.sh.
     terraform_version: v1.16.4
     autoplan:
       when_modified: ["*.tf", ".terraform.lock.hcl", "../../modules/**/*.tf"]

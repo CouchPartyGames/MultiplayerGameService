@@ -14,7 +14,7 @@ Infrastructure/GitOps config for a multiplayer game backend demo built on **Agon
 - Chart versions are pinned in the Application/ApplicationSet `targetRevision`, not in values files.
 - `argocd/local/infra/argo-cd.yaml` manages the ArgoCD install itself (release `argo-cd`, the same one the bootstrap scripts create). Change its `targetRevision` together with `ARGO_CD_CHART_VERSION` in `scripts/k8s-providers/versions.sh`.
 - `scripts/` holds the imperative steps that run outside ArgoCD: cluster bootstrap for minikube, kind, and k3s (each installs ArgoCD via Helm), CLI installers, and version defaults in `k8s-providers/versions.sh` (cluster tools, ArgoCD chart) and `tools/version.sh` (CLIs). `scripts/README.md` documents them and the ArgoCD CLI workflow.
-- `terraform/` holds GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations as root modules in `envs/<cloud>-<accountid>/` that call child modules in `modules/<cloud-provider>/<module-name>/` (layout rules in `terraform/README.md`), plus Terraform and Atlantis installers in `terraform/scripts/` (versions in `terraform/scripts/version.sh`). Nothing in `argocd/` targets those clusters yet.
+- `terraform/` holds GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations as root modules in `envs/<cloud>-<accountid>/` that call child modules in `modules/<cloud-provider>/<module-name>/` (layout rules in `terraform/README.md`), plus Terraform, Atlantis, and TFLint installers in `terraform/tools/` (versions in `terraform/tools/version.sh`) and the `terraform test` runner in `terraform/scripts/`. Nothing in `argocd/` targets those clusters yet.
 
 ## Environments
 
