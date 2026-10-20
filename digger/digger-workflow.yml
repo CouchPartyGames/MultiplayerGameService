@@ -1,0 +1,39 @@
+# .github/workflows/digger-workflow.yml
+# The Digger orchestrator (GitHub App, hosted or self-hosted) dispatches this
+# workflow with a "spec" describing which project and command to run.
+
+name: Digger Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec:
+        required: true
+      run_name:
+        required: false
+
+run-name: '${{ inputs.run_name }}'
+
+jobs:
+  digger-job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write        # OIDC -> AWS, no static keys
+      pull-requests: write   # post plan output as PR comments
+      issues: write
+      statuses: write
+      actions: read
+    steps:
+      - uses: diggerhq/digger@vLatest   # pin to a specific release tag in practice
+        with:
+          digger-spec: ${{ inputs.spec }}
+          setup-terraform: true
+          terraform-version: 1.6.6
+          setup-aws: true
+          aws-role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+          cache-dependencies: true
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
