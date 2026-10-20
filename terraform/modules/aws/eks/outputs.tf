@@ -30,5 +30,5 @@ output "node_role_arn" {
 
 output "get_credentials_command" {
   description = "Run with credentials for a configured administrator principal (or add --role-arn for an assumable administrator role)."
-  value       = "aws eks update-kubeconfig --region ${var.region} --name ${aws_eks_cluster.eks.name}"
+  value       = "aws eks update-kubeconfig --region ${data.aws_region.current.region} --name ${aws_eks_cluster.eks.name}"
 }

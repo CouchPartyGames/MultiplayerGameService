@@ -1,8 +1,21 @@
 # AWS network and EKS
 
-This Terraform root creates a VPC, two public and two private subnets across two availability zones, an internet gateway, NAT routing, an EKS cluster, and a managed node group in an existing AWS account.
+This child module creates a VPC, two public and two private subnets across two availability zones, an internet gateway, NAT routing, an EKS cluster, and a managed node group in an existing AWS account. It has no `provider` block: the calling root module sets the region, account, and default tags. [`terraform/envs/aws-123456789012/`](../../../envs/aws-123456789012/) calls it.
 
-Defaults are `us-east-1`, three on-demand `m6i.xlarge` Amazon Linux 2023 nodes with 50 GB disks, and one NAT gateway. The first two available standard zones, sorted by name, are selected. Nodes have private IPs and use the private Kubernetes API endpoint. The public API endpoint is restricted to `admin_cidrs`. EKS manages the cluster security group used by the control plane and managed nodes.
+## Usage
+
+```hcl
+module "eks" {
+  source = "../../modules/aws/eks"
+
+  admin_cidrs          = ["203.0.113.10/32"]
+  admin_principal_arns = ["arn:aws:iam::123456789012:role/EKSAdministrators"]
+}
+```
+
+Inputs are in [`variables.tf`](variables.tf) and outputs in [`outputs.tf`](outputs.tf). Only `admin_cidrs` and `admin_principal_arns` are required.
+
+Defaults are three on-demand `m6i.xlarge` Amazon Linux 2023 nodes with 50 GB disks, and one NAT gateway. The first two available standard zones, sorted by name, are selected. Nodes have private IPs and use the private Kubernetes API endpoint. The public API endpoint is restricted to `admin_cidrs`. EKS manages the cluster security group used by the control plane and managed nodes.
 
 The demo shares one NAT gateway between zones. This incurs cross-zone traffic charges and makes outbound connectivity depend on its zone. Set `single_nat_gateway = false` for a NAT gateway in each zone. EKS, EC2, storage, NAT, public IPv4, and logs incur charges.
 
@@ -15,7 +28,7 @@ The demo shares one NAT gateway between zones. This incurs cross-zone traffic ch
 
 ## Deploy
 
-Authenticate using your normal AWS credential chain, for example an AWS CLI SSO profile. From this directory:
+Authenticate using your normal AWS credential chain, for example an AWS CLI SSO profile. From the root module, `terraform/envs/aws-123456789012/`:
 
 ```bash
 aws sso login --profile YOUR_PROFILE
@@ -24,11 +37,11 @@ aws sts get-caller-identity
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars`: replace the administrator ARN and documentation-only CIDR with real values. Include the IAM role you will use for `kubectl` in `admin_principal_arns`. That identity also needs `eks:DescribeCluster` to download connection settings; an EKS access policy grants Kubernetes access, not AWS API permissions.
+In `main.tf` and `versions.tf`, replace the placeholder account ID and set the region. Edit `terraform.tfvars`: replace the administrator ARN and documentation-only CIDR with real values. Include the IAM role you will use for `kubectl` in `admin_principal_arns`. That identity also needs `eks:DescribeCluster` to download connection settings; an EKS access policy grants Kubernetes access, not AWS API permissions.
 
 The VPC must be an IPv4 `/16`; public `/20` subnets use indexes 0 and 1 and private `/20` subnets use indexes 8 and 9. Pods use private subnet addresses through the VPC CNI. Avoid overlap with connected networks. EKS chooses its Service range by default.
 
-Set `kubernetes_version` to a minor version supported in your region when explicit version control is needed. With `null`, EKS selects its default at creation. Review the EKS support calendar and plan later upgrades; managed node updates and add-on upgrades are not automatically scheduled by this configuration.
+Pass `kubernetes_version` to the module with a minor version supported in your region when explicit version control is needed. With `null`, EKS selects its default at creation. Review the EKS support calendar and plan later upgrades; managed node updates and add-on upgrades are not automatically scheduled by this configuration.
 
 ```bash
 terraform init
@@ -60,9 +73,9 @@ Direct Agones game-server connectivity requires additional public-node/game-port
 
 Credentials come from the AWS credential chain; no keys are written in the Terraform files. Local state is used by default. Keep state secure and backed up; the parent `.gitignore` excludes actual variable values, state, plans, and provider downloads. Commit `.terraform.lock.hcl`. Use the repository's SOPS and age workflow for any new secrets.
 
-For team use, configure an S3 backend with a separately provisioned bucket and state locking, then migrate using `terraform init -migrate-state`. Keep each cloud root's state separate.
+For team use, add an S3 backend to the root module, using a bucket and lock table from [`s3-terraform-state`](../s3-terraform-state/), then migrate using `terraform init -migrate-state`. Keep each root module's state separate.
 
-Before teardown, delete Kubernetes Ingresses, LoadBalancer Services, and provisioned volumes that should be removed, while their controllers still run. Otherwise their AWS resources can remain and prevent VPC deletion. Then run:
+Before teardown, from the root module, delete Kubernetes Ingresses, LoadBalancer Services, and provisioned volumes that should be removed, while their controllers still run. Otherwise their AWS resources can remain and prevent VPC deletion. Then run:
 
 ```bash
 terraform destroy

@@ -1,5 +1,5 @@
 # Unit tests with a mocked AWS provider: no credentials needed, no resources created.
-# Run with `terraform -chdir=terraform/aws test`.
+# Run with `terraform -chdir=terraform/modules/aws/eks test`.
 
 mock_provider "aws" {
   # The provider validates policy ARNs, so the partition must be a real one.

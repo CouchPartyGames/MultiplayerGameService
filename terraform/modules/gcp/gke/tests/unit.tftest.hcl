@@ -1,5 +1,5 @@
 # Unit tests with a mocked Google provider: no credentials needed, no resources created.
-# Run with `terraform -chdir=terraform/gcp test`.
+# Run with `terraform -chdir=terraform/modules/gcp/gke test`.
 
 mock_provider "google" {}
 

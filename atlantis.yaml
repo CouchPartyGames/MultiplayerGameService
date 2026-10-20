@@ -1,5 +1,6 @@
 # Atlantis repo-level config (https://www.runatlantis.io/docs/repo-level-atlantis-yaml.html).
-# Each cloud configuration under terraform/ is its own project, planned when its files change.
+# Each root module under terraform/envs/ is its own project, planned when its files or a child
+# module under terraform/modules/ change.
 version: 3
 automerge: false
 parallel_plan: true
@@ -7,26 +8,26 @@ parallel_apply: false
 
 projects:
   - name: aws
-    dir: terraform/aws
+    dir: terraform/envs/aws-123456789012
     workspace: default
     # Keep in sync with TERRAFORM_VERSION in terraform/scripts/version.sh.
     terraform_version: v1.16.4
     autoplan:
-      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      when_modified: ["*.tf", ".terraform.lock.hcl", "../../modules/**/*.tf"]
       enabled: true
 
   - name: azure
-    dir: terraform/azure
+    dir: terraform/envs/azure-00000000-0000-0000-0000-000000000000
     workspace: default
     terraform_version: v1.16.4
     autoplan:
-      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      when_modified: ["*.tf", ".terraform.lock.hcl", "../../modules/**/*.tf"]
       enabled: true
 
   - name: gcp
-    dir: terraform/gcp
+    dir: terraform/envs/gcp-multiplayer-demo
     workspace: default
     terraform_version: v1.16.4
     autoplan:
-      when_modified: ["*.tf", ".terraform.lock.hcl"]
+      when_modified: ["*.tf", ".terraform.lock.hcl", "../../modules/**/*.tf"]
       enabled: true

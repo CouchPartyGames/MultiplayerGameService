@@ -39,7 +39,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [terraform/aws, terraform/azure, terraform/gcp]
+        dir:
+          - terraform/envs/aws-123456789012
+          - terraform/envs/azure-00000000-0000-0000-0000-000000000000
+          - terraform/envs/gcp-multiplayer-demo
+          - terraform/modules/aws/eks
+          - terraform/modules/aws/s3-terraform-state
+          - terraform/modules/azure/aks
+          - terraform/modules/gcp/gke
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -67,7 +74,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [terraform/aws, terraform/azure, terraform/gcp]
+        dir:
+          - terraform/envs/aws-123456789012
+          - terraform/envs/azure-00000000-0000-0000-0000-000000000000
+          - terraform/envs/gcp-multiplayer-demo
+          - terraform/modules/aws/eks
+          - terraform/modules/aws/s3-terraform-state
+          - terraform/modules/azure/aks
+          - terraform/modules/gcp/gke
     steps:
       - uses: actions/checkout@v4
 

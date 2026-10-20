@@ -1,5 +1,7 @@
 data "aws_partition" "current" {}
 
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "cluster" {
   name = "${var.cluster_name}-cluster"
   assume_role_policy = jsonencode({

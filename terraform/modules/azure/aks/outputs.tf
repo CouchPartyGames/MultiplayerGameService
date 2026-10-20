@@ -30,5 +30,5 @@ output "oidc_issuer_url" {
 
 output "get_credentials_command" {
   description = "Run this command after apply, then run kubelogin convert-kubeconfig -l azurecli."
-  value       = "az aks get-credentials --subscription ${var.subscription_id} --resource-group ${azurerm_resource_group.aks.name} --name ${azurerm_kubernetes_cluster.aks.name}"
+  value       = "az aks get-credentials --subscription ${data.azurerm_client_config.current.subscription_id} --resource-group ${azurerm_resource_group.aks.name} --name ${azurerm_kubernetes_cluster.aks.name}"
 }

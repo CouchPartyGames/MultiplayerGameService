@@ -1,0 +1,2 @@
+# Replace with your workstation or VPN's public IPv4 address/range.
+admin_cidrs = ["203.0.113.10/32"]

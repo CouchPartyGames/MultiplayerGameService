@@ -1,6 +1,6 @@
 # GCP network and GKE
 
-This Terraform root creates infrastructure in an existing GCP project:
+This child module creates infrastructure in an existing GCP project:
 
 - A custom VPC and regional subnet with separate node, Pod, and Service ranges.
 - A zonal GKE Standard cluster on the `REGULAR` release channel.
@@ -9,6 +9,23 @@ This Terraform root creates infrastructure in an existing GCP project:
 - An optional inbound UDP rule for Agones ports `7000-8000`.
 
 Nodes have public IPs so Agones can advertise directly reachable game servers. The Kubernetes API uses a public endpoint restricted to `admin_cidrs`. The optional game firewall only targets this cluster's nodes. GKE manages its own cluster communication firewall rules. No Cloud NAT is needed for these public nodes.
+
+The module has no `provider` block. The calling root module configures the Google provider and passes the same `project_id`, `region`, and `zone`. [`terraform/envs/gcp-multiplayer-demo/`](../../../envs/gcp-multiplayer-demo/) calls it.
+
+## Usage
+
+```hcl
+module "gke" {
+  source = "../../modules/gcp/gke"
+
+  project_id  = "multiplayer-demo"
+  region      = "us-east1"
+  zone        = "us-east1-b"
+  admin_cidrs = ["203.0.113.10/32"]
+}
+```
+
+Inputs are in [`variables.tf`](variables.tf) and outputs in [`outputs.tf`](outputs.tf). Only `project_id` and `admin_cidrs` are required.
 
 This is a single-zone demo baseline. A production availability design should consider a regional cluster and nodes across zones. Kubernetes components, including ArgoCD and Agones, are installed separately; the manifests under `argocd/prod/` are still skeletons and need their cluster destinations configured.
 
@@ -21,7 +38,7 @@ This is a single-zone demo baseline. A production availability design should con
 
 ## Deploy
 
-From this directory:
+From the root module, `terraform/envs/gcp-multiplayer-demo/`:
 
 ```bash
 gcloud auth login
@@ -30,7 +47,7 @@ gcloud services enable serviceusage.googleapis.com --project YOUR_PROJECT_ID
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars`: set `project_id` and replace the documentation-only administrator IP with your workstation or VPN's public IPv4 address followed by `/32`. If changing the location, set both `region` and a `zone` within that region. CIDR ranges must not overlap each other or networks you intend to connect. Set `enable_agones_udp = true` when deploying game servers that use the default Agones UDP range; adjust `game_client_cidrs` if access should be restricted.
+In `main.tf`, set `project_id` in `locals`. If changing the location, set both `region` and a `zone` within that region. Edit `terraform.tfvars`: replace the documentation-only administrator IP with your workstation or VPN's public IPv4 address followed by `/32`. CIDR ranges must not overlap each other or networks you intend to connect. Pass `enable_agones_udp = true` to the module when deploying game servers that use the default Agones UDP range; adjust `game_client_cidrs` if access should be restricted.
 
 ```bash
 terraform init
@@ -53,11 +70,11 @@ The node account has the [GKE node role](https://docs.cloud.google.com/kubernete
 
 Authentication uses Application Default Credentials; no service account keys are stored in these files. Terraform uses local state by default. State, variable values, saved plans, and downloaded providers are ignored by Git; keep the generated `.terraform.lock.hcl` in version control. Use the repository's SOPS and age workflow for any new secrets.
 
-For shared use, configure a GCS backend with a separately provisioned state bucket and run `terraform init -migrate-state` before collaborating. Keep state secure and backed up because it is required to manage or destroy the resources.
+For shared use, add a GCS backend to the root module with a separately provisioned state bucket and run `terraform init -migrate-state` before collaborating. Keep state secure and backed up because it is required to manage or destroy the resources.
 
 ## Destroy
 
-First remove Kubernetes Services of type LoadBalancer and workloads with provisioned disks if their cloud resources should also be deleted. Then set `deletion_protection = false` in `terraform.tfvars` and apply that change before destroying:
+First remove Kubernetes Services of type LoadBalancer and workloads with provisioned disks if their cloud resources should also be deleted. Then pass `deletion_protection = false` to the module in the root module's `main.tf` and apply that change before destroying:
 
 ```bash
 terraform apply

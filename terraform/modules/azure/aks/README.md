@@ -1,6 +1,19 @@
 # Azure network and AKS
 
-This Terraform root creates a resource group, virtual network, node subnet, user-assigned cluster identity with Network Contributor access to the subnet, and an AKS cluster in an existing subscription.
+This child module creates a resource group, virtual network, node subnet, user-assigned cluster identity with Network Contributor access to the subnet, and an AKS cluster in an existing subscription. It has no `provider` block: the calling root module selects the subscription. [`terraform/envs/azure-00000000-0000-0000-0000-000000000000/`](../../../envs/azure-00000000-0000-0000-0000-000000000000/) calls it.
+
+## Usage
+
+```hcl
+module "aks" {
+  source = "../../modules/azure/aks"
+
+  admin_cidrs            = ["203.0.113.10/32"]
+  admin_group_object_ids = ["00000000-0000-0000-0000-000000000000"]
+}
+```
+
+Inputs are in [`variables.tf`](variables.tf) and outputs in [`outputs.tf`](outputs.tf). Only `admin_cidrs` and `admin_group_object_ids` are required.
 
 The defaults are East US, three `Standard_D4s_v5` Ubuntu nodes, 64 GB managed OS disks, and the Free control plane tier. The system pool also runs demo workloads. Set `sku_tier = "Standard"` and supported `availability_zones` when an uptime SLA and node distribution across zones are needed.
 
@@ -15,7 +28,7 @@ Azure CNI Overlay uses separate Pod and Service ranges. Nodes have private IPs; 
 
 ## Deploy
 
-From this directory:
+From the root module, `terraform/envs/azure-00000000-0000-0000-0000-000000000000/`:
 
 ```bash
 az login
@@ -23,7 +36,7 @@ az account set --subscription YOUR_SUBSCRIPTION_ID
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars` with your subscription ID, administrator group object IDs, and workstation or VPN public IP CIDR. The example IDs and IP are placeholders. The node subnet must fit inside the VNet. VNet, Pod, and Service ranges must not overlap each other or connected networks. Confirm the VM size and any selected availability zones are available in your region.
+In `versions.tf`, replace the placeholder `subscription_id`. Edit `terraform.tfvars` with your administrator group object IDs and workstation or VPN public IP CIDR. The example IDs and IP are placeholders. The node subnet must fit inside the VNet. VNet, Pod, and Service ranges must not overlap each other or connected networks. Confirm the VM size and any selected availability zones are available in your region.
 
 ```bash
 terraform init
@@ -51,11 +64,11 @@ Install ArgoCD, Agones, and other Kubernetes components separately. Existing `ar
 
 Private Azure Container Registry pulls require an appropriate registry role for the AKS kubelet identity. Cluster workload identity is configured independently of image-pull permissions.
 
-Terraform authenticates through Azure CLI locally. State is local by default and may contain sensitive data; keep it secure and backed up. The parent `.gitignore` excludes state, actual variable values, plans, and downloaded providers. Commit `.terraform.lock.hcl`. For team use, configure an `azurerm` backend with a separately provisioned storage account and container, then migrate state with `terraform init -migrate-state`. Use SOPS and age for any new repository secrets.
+Terraform authenticates through Azure CLI locally. State is local by default and may contain sensitive data; keep it secure and backed up. The parent `.gitignore` excludes state, actual variable values, plans, and downloaded providers. Commit `.terraform.lock.hcl`. For team use, add an `azurerm` backend to the root module with a separately provisioned storage account and container, then migrate state with `terraform init -migrate-state`. Use SOPS and age for any new repository secrets.
 
 ## Destroy
 
-Remove Kubernetes workloads, LoadBalancer Services, and provisioned volumes that should be cleaned up before deleting the cluster. Then run:
+Remove Kubernetes workloads, LoadBalancer Services, and provisioned volumes that should be cleaned up before deleting the cluster. Then, from the root module, run:
 
 ```bash
 terraform destroy

@@ -1,9 +1,3 @@
-variable "region" {
-  description = "AWS region with at least two available standard availability zones."
-  type        = string
-  default     = "us-east-1"
-}
-
 variable "cluster_name" {
   description = "EKS cluster name and prefix for network and IAM resources."
   type        = string
@@ -86,15 +80,5 @@ variable "disk_size_gb" {
   validation {
     condition     = var.disk_size_gb >= 20 && floor(var.disk_size_gb) == var.disk_size_gb
     error_message = "disk_size_gb must be an integer of at least 20."
-  }
-}
-
-variable "tags" {
-  description = "Default tags for AWS resources."
-  type        = map(string)
-  default = {
-    project     = "multiplayer-demo"
-    environment = "demo"
-    managed_by  = "terraform"
   }
 }

@@ -1,10 +1,9 @@
 # Unit tests with a mocked AzureRM provider: no credentials needed, no resources created.
-# Run with `terraform -chdir=terraform/azure test`.
+# Run with `terraform -chdir=terraform/modules/azure/aks test`.
 
 mock_provider "azurerm" {}
 
 variables {
-  subscription_id        = "00000000-0000-0000-0000-000000000000"
   admin_cidrs            = ["203.0.113.10/32"]
   admin_group_object_ids = ["11111111-1111-1111-1111-111111111111"]
 }

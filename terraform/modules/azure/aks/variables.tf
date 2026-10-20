@@ -1,8 +1,3 @@
-variable "subscription_id" {
-  description = "Existing Azure subscription ID."
-  type        = string
-}
-
 variable "location" {
   description = "Azure region for the cluster and network."
   type        = string
