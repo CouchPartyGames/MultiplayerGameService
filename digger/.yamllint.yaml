@@ -1,0 +1,19 @@
+# yamllint rules for digger/, kept compatible with .yamlfmt and with the yq output of
+# scripts/digger-missing-projects.sh.
+extends: default
+
+rules:
+  # Two-space indentation, with list items indented beneath their key.
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  # GitHub workflows and digger.yml don't start with `---`.
+  document-start: disable
+  # Workflow expressions and PR bodies run long.
+  line-length: disable
+  # yamlfmt and yq put one space before an inline comment.
+  comments:
+    min-spaces-from-content: 1
+  # GitHub workflows use `on:` as a key.
+  truthy:
+    check-keys: false

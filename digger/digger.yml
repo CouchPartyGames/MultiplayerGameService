@@ -8,12 +8,12 @@ projects:
 
   - name: eks-staging
     dir: infra/staging/eks
-    depends_on: ["networking-staging"]   # applied after networking
+    depends_on: ["networking-staging"] # applied after networking
     workflow: default
 
   - name: eks-prod
     dir: infra/prod/eks
-    workflow: prod                       # stricter workflow below
+    workflow: prod # stricter workflow below
 
 workflows:
   default:
@@ -29,7 +29,7 @@ workflows:
     plan:
       steps:
         - init
-        - run: "checkov -d . --quiet"    # static analysis before plan
+        - run: "checkov -d . --quiet" # static analysis before plan
         - plan
     apply:
       steps:

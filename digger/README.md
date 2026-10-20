@@ -9,6 +9,7 @@ This directory holds draft configuration for [Digger](https://github.com/diggerh
 | `digger-sync-projects.yml` | `.github/workflows/digger-sync-projects.yml` | Daily PR that keeps `digger.yml` in step with `terraform/envs/` |
 | `digger-terraform-plan-drift.yml` | `.github/workflows/digger-terraform-plan-drift.yml` | Weekday drift detection, reported to Slack |
 | `scripts/digger-missing-projects.sh` | stays here | Adds and removes `digger.yml` projects; used by the sync workflow |
+| `.pre-commit-config.yaml`, `.yamllint.yaml`, `.yamlfmt` | stay here | YAML lint and format hooks (see [Pre-commit hooks](#pre-commit-hooks)) |
 
 ## `digger.yml`
 
@@ -71,3 +72,24 @@ Pull requests opened with `GITHUB_TOKEN` don't trigger other workflows, so CI do
 - Replace `<release-tag>` with a Digger release.
 - Add `permissions` and cloud credentials so it can run `terraform plan`, as `digger-workflow.yml` does.
 - Add the `DRIFT_SLACK_WEBHOOK` repository secret.
+
+## Pre-commit hooks
+
+`.pre-commit-config.yaml` checks every `.yml` and `.yaml` file in this directory on commit. [prek](https://github.com/j178/prek) runs it in workspace mode from `digger/` (see `tools/README.md`):
+
+| Hook | Check | Config |
+| --- | --- | --- |
+| `yamllint` | Syntax and style: two-space indentation, no trailing spaces, valid truthy values | `.yamllint.yaml` |
+| `yamlfmt` | Fails when a file differs from yamlfmt's output, and prints the diff | `.yamlfmt` |
+
+The yamlfmt hook calls the local binary, so install it first with `./tools/yamlfmt-install.sh`. To fix formatting, run `yamlfmt` from `digger/`. yamlfmt puts one space before an inline comment, so don't align comments in columns.
+
+Run only these hooks from the repository root:
+
+```bash
+prek run digger/ --all-files
+```
+
+`--all-files` covers only files Git tracks. Before the first commit, pass the files with `prek run --files digger/*.yml` instead.
+
+`.yamllint.yaml` differs from the root config used for `argocd/` in two ways: it doesn't require `---` at the top of a file, because GitHub workflows and `digger.yml` don't use one, and it allows one space before inline comments, which is what yamlfmt and the sync script's `yq` write.

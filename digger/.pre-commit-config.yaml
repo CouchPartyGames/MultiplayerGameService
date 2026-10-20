@@ -1,0 +1,23 @@
+# YAML hooks for digger/, run by prek (https://github.com/j178/prek) in workspace mode
+# alongside the root .pre-commit-config.yaml. prek runs these hooks from digger/, so `files`
+# patterns and the filenames hooks receive are relative to this directory.
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      # Lints YAML against .yamllint.yaml in this directory.
+      - id: yamllint
+        files: \.ya?ml$
+        args:
+          - --strict
+          - --config-file=.yamllint.yaml
+
+  - repo: local
+    hooks:
+      # Fails when a YAML file isn't formatted as .yamlfmt says. Run `yamlfmt` from digger/
+      # to fix it. Calls the local `yamlfmt`; install it with tools/yamlfmt-install.sh.
+      - id: yamlfmt
+        name: yamlfmt
+        entry: yamlfmt -lint -conf .yamlfmt
+        language: system
+        files: \.ya?ml$

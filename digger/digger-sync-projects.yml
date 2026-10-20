@@ -10,19 +10,19 @@ name: Digger Sync Projects
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # daily at 06:00 UTC
+    - cron: "0 6 * * *" # daily at 06:00 UTC
   workflow_dispatch:
 
 permissions:
-  contents: write         # push the sync branch
-  pull-requests: write    # open and update the PR
+  contents: write # push the sync branch
+  pull-requests: write # open and update the PR
 
 concurrency:
   group: digger-sync-projects
   cancel-in-progress: false
 
 env:
-  DIGGER_CONFIG: digger/digger.yml   # change to digger.yml when the config moves to the repo root
+  DIGGER_CONFIG: digger/digger.yml # change to digger.yml when the config moves to the repo root
   SYNC_BRANCH: chore/digger-sync-projects
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
       - uses: peter-evans/create-pull-request@v7
         with:
           branch: ${{ env.SYNC_BRANCH }}
-          delete-branch: true    # closes the PR once main is back in sync
+          delete-branch: true # closes the PR once main is back in sync
           add-paths: ${{ env.DIGGER_CONFIG }}
           commit-message: "chore(digger): sync projects with terraform/envs"
           title: "chore(digger): sync projects with terraform/envs"
