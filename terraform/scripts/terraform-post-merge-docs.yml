@@ -1,0 +1,28 @@
+# Github Action to create documentation on Terraform Managed Accounts
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'terraform/**'
+
+jobs:
+  docs:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions: { contents: write, pull-requests: write }
+    steps:
+      - uses: actions/checkout@<sha>
+        with: { ref: main }
+      - id: envs
+        env: { GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+        run: |
+          gh pr diff ${{ github.event.pull_request.number }} --name-only \
+            | grep '^terraform/' | xargs -n1 dirname | sort -u > changed_dirs.txt
+          # map dirs -> atlantis project names via atlantis.yaml (yq)
+      - run: ./scripts/generate-env-docs.sh changed_dirs.txt
+      - uses: peter-evans/create-pull-request@<sha>
+        with:
+          branch: docs/terraform-env-updates
+          title: "docs: update environment docs after #${{ github.event.pull_request.number }}"
