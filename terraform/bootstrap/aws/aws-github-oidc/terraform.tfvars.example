@@ -1,0 +1,27 @@
+# Copy to terraform.tfvars (ignored by Git) and adjust.
+
+github_org  = "CouchPartyGames"
+github_repo = "MultiplayerGameService"
+
+# Branches, PRs, or environments allowed to assume the role.
+github_subjects = [
+  "ref:refs/heads/main",
+  "pull_request",
+]
+
+role_name = "github-actions"
+
+# What the workflows may do. This example lets them use a Terraform state bucket
+# with S3 native locking; replace the bucket name and add what your workflows need.
+role_policy_statements = [
+  {
+    sid       = "ListStateBucket"
+    actions   = ["s3:ListBucket"]
+    resources = ["arn:aws:s3:::multiplayer-demo-tfstate-123456789012"]
+  },
+  {
+    sid       = "ReadWriteState"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["arn:aws:s3:::multiplayer-demo-tfstate-123456789012/*"]
+  },
+]
