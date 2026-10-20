@@ -28,6 +28,7 @@ The repository's hooks run with prek, not pre-commit. They are split across two 
 | --- | --- | --- |
 | `.pre-commit-config.yaml` | yamllint, Helm, and chart-testing | `helm/README.md` |
 | `terraform/.pre-commit-config.yaml` | TFLint, `terraform fmt`, `terraform validate`, and `terraform test` | `terraform/README.md` |
+| `digger/.pre-commit-config.yaml` | yamllint and yamlfmt | `digger/README.md` |
 
 prek finds the nested config automatically (workspace mode) and runs its hooks from `terraform/`. Plain pre-commit reads only the root config, so it would silently skip the Terraform hooks. The hooks call local binaries such as `terraform`, `tflint`, `helm`, and `ct`, so install those with their scripts first.
 
