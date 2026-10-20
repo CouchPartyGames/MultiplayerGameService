@@ -1,6 +1,6 @@
 # Terraform
 
-This directory contains Terraform and Atlantis installers in `tools/`, the `terraform test` runner in `scripts/`, and GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations split into root modules in `envs/` and child modules in `modules/`. Run the commands below from the repository root.
+This directory contains Terraform and Atlantis installers in `tools/`, the `terraform test` runner in `scripts/`, provider bootstrap root modules in `bootstrap/`, and GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations split into root modules in `envs/` and child modules in `modules/`. Run the commands below from the repository root.
 
 ## Root and child modules
 
@@ -8,6 +8,9 @@ New Terraform code is split into root modules, which you run, and child modules,
 
 ```text
 terraform/
+├── bootstrap/                     # root modules that prepare a provider (see Bootstrap)
+│   └── <cloud-provider>/          # aws, azure, or gcp
+│       └── <module-name>/         # e.g. aws/aws-state-bucket
 ├── envs/                          # root modules: one per cloud account
 │   └── <cloud>-<accountid>/       # e.g. aws-123456789012
 └── modules/                       # child modules: reusable, never run directly
@@ -77,6 +80,32 @@ After changing a child module, run `plan` in every root module that calls it, be
 ### Checks for the new directories
 
 The hooks in `terraform/.pre-commit-config.yaml` lint, validate, and test changed files under `envs/` and `modules/`. A new root module also needs a `README.md` from `envs/README.template.md` (see [Environment docs](#environment-docs)). The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
+
+## Bootstrap
+
+`bootstrap/` holds root modules that prepare a cloud provider (AWS, GCP, or Azure) so the root modules in `envs/` can run. A bootstrap module is typically responsible for:
+
+- **Authentication:** the identities that CI and Atlantis use to reach the account, such as an AWS IAM OIDC provider and roles that GitHub Actions can assume.
+- **State storage:** the bucket, and lock table where the backend needs one, that holds Terraform state for the `envs/` root modules. Their `backend` blocks point at it.
+
+Group bootstrap modules by provider in `bootstrap/<cloud-provider>/<module-name>/`, for example `bootstrap/aws/aws-state-bucket/`, `bootstrap/gcp/gcp-state-bucket/`, and `bootstrap/azure/azure-state-bucket/`. They follow the same rules as other root modules: they configure their own `provider` blocks, call child modules from `modules/` (the AWS state bucket is the natural caller of `modules/aws/s3-terraform-state/`), and commit their `.terraform.lock.hcl`.
+
+They differ from `envs/` in how they run:
+
+- **They run first, by hand.** Bootstrap creates the credentials and state storage that Atlantis and CI rely on, so it is not an Atlantis project or a CI matrix entry. Apply it with your own administrator credentials, once per account, and again only when the bootstrap resources change.
+- **They start with local state.** The state bucket does not exist until the first apply, so a state-bucket module begins without a `backend` block. After the first apply, add a `backend` block that points at the bucket it created and move its state there:
+
+  ```bash
+  terraform -chdir=terraform/bootstrap/aws/aws-state-bucket init
+  terraform -chdir=terraform/bootstrap/aws/aws-state-bucket apply
+  # Add a backend block for the new bucket, then:
+  terraform -chdir=terraform/bootstrap/aws/aws-state-bucket init -migrate-state
+  ```
+
+  `.gitignore` keeps the local `terraform.tfstate` out of Git. Delete it once the state is migrated.
+- **Destroying them breaks every env.** Deleting the state bucket or the CI roles cuts off every root module in that account, so protect them, for example with `prevent_destroy` or bucket deletion protection.
+
+The provider directories under `bootstrap/` have no configuration yet.
 
 ## Install Terraform
 
