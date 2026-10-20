@@ -1,6 +1,6 @@
 # Terraform
 
-This directory contains Terraform and Atlantis installation scripts in `scripts/`, and GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations split into root modules in `envs/` and child modules in `modules/`. Run the commands below from the repository root.
+This directory contains Terraform and Atlantis installers in `tools/`, the `terraform test` runner in `scripts/`, and GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations split into root modules in `envs/` and child modules in `modules/`. Run the commands below from the repository root.
 
 ## Root and child modules
 
@@ -83,13 +83,13 @@ The pre-commit hooks lint, validate, and test changed files under `envs/` and `m
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/scripts/terraform-install.sh
+./terraform/tools/terraform-install.sh
 ```
 
-The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TERRAFORM_VERSION` in `scripts/version.sh`; override it for one run with:
+The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TERRAFORM_VERSION` in `tools/version.sh`; override it for one run with:
 
 ```bash
-TERRAFORM_VERSION=1.16.4 ./terraform/scripts/terraform-install.sh
+TERRAFORM_VERSION=1.16.4 ./terraform/tools/terraform-install.sh
 ```
 
 Check the installed version with `terraform version`.
@@ -99,13 +99,13 @@ Check the installed version with `terraform version`.
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/scripts/atlantis-install.sh
+./terraform/tools/atlantis-install.sh
 ```
 
-The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `scripts/version.sh`; override it for one run with:
+The script downloads Atlantis from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `ATLANTIS_VERSION` in `tools/version.sh`; override it for one run with:
 
 ```bash
-ATLANTIS_VERSION=0.48.1 ./terraform/scripts/atlantis-install.sh
+ATLANTIS_VERSION=0.48.1 ./terraform/tools/atlantis-install.sh
 ```
 
 ## Install TFLint
@@ -113,13 +113,13 @@ ATLANTIS_VERSION=0.48.1 ./terraform/scripts/atlantis-install.sh
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 
 ```bash
-./terraform/scripts/tflint-install.sh
+./terraform/tools/tflint-install.sh
 ```
 
-The script downloads TFLint from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TFLINT_VERSION` in `scripts/version.sh`, which matches the `tflint_version` in `.github/workflows/terraform.yaml`; keep the two in step. Override it for one run with:
+The script downloads TFLint from its GitHub releases, checks the archive against the release's SHA-256 checksums, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TFLINT_VERSION` in `tools/version.sh`, which matches the `tflint_version` in `.github/workflows/terraform.yaml`; keep the two in step. Override it for one run with:
 
 ```bash
-TFLINT_VERSION=0.64.0 ./terraform/scripts/tflint-install.sh
+TFLINT_VERSION=0.64.0 ./terraform/tools/tflint-install.sh
 ```
 
 ## Lint with TFLint
