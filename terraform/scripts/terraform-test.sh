@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Runs `terraform test` in each configuration under terraform/ that contains one
-# of the given files and has a tests/ directory. pre-commit passes the changed
-# files; with no arguments, every child module with tests is run. The tests use
-# mock providers, so they need no cloud credentials and create no resources.
+# of the given files and has a tests/ directory. File paths are relative to the
+# current directory; prek runs the hook from terraform/ and passes the changed
+# files relative to it. With no arguments, every child module with tests is run.
+# The tests use mock providers, so they need no cloud credentials and create no
+# resources.
 set -euo pipefail
 
 if ! command -v terraform >/dev/null 2>&1; then
@@ -10,11 +12,9 @@ if ! command -v terraform >/dev/null 2>&1; then
   exit 1
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-cd "$REPO_ROOT"
-
 if [ "$#" -eq 0 ]; then
-  set -- terraform/modules/*/*/versions.tf
+  cd "$(dirname "${BASH_SOURCE[0]}")/.."
+  set -- modules/*/*/versions.tf
 fi
 
 # Map each file to its configuration directory; files under tests/ belong to the parent.

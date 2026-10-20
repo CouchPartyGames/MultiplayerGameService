@@ -7,7 +7,7 @@ The scripts are split into two directories:
 ```text
 scripts/
 ├── k8s-providers/   Install and bootstrap a local cluster (kind, minikube, k3s), plus versions.sh
-└── tools/           Install developer CLIs (ArgoCD CLI, pre-commit), plus version.sh
+└── tools/           Install developer CLIs (ArgoCD CLI), plus version.sh
 ```
 
 ### `k8s-providers/`
@@ -31,7 +31,6 @@ scripts/
 | --- | --- |
 | `tools/argocd-cli-install-linux.sh` | Install the ArgoCD CLI on Linux (amd64 or arm64); version set by `ARGOCD_CLI_VERSION`. |
 | `tools/argocd-cli-install-mac.sh` | Install the ArgoCD CLI on macOS (Intel or Apple Silicon). Uses Homebrew when available and `ARGOCD_CLI_VERSION` is `latest`; otherwise downloads the release binary. |
-| `tools/precommit-install.sh` | Install pre-commit on Linux or macOS (Homebrew, then pipx, then `pip --user`) and run `pre-commit install` for this repo. Skips the install if pre-commit is already on `PATH`. |
 | `tools/version.sh` | Version defaults for the tool installers. |
 
 ## Quickstart
@@ -148,7 +147,6 @@ These defaults come from the file in the Set in column. Override any of them in 
 | `ARGOCD_CLI_VERSION` | `latest` | `tools/version.sh` | ArgoCD CLI installers |
 | `KIND_VERSION` | `v0.27.0` | `k8s-providers/versions.sh` | kind installers |
 | `MINIKUBE_VERSION` | `latest` | `k8s-providers/versions.sh` | minikube installers |
-| `PRE_COMMIT_VERSION` | `latest` | `tools/version.sh` | `tools/precommit-install.sh` (Homebrew only for `latest`) |
 | `MINIKUBE_DRIVER` | `docker` | `k8s-providers/versions.sh` | `minikube-bootstrap.sh` |
 | `K3S_VERSION` | Empty: the k3s stable channel on Linux, k3d's bundled k3s on macOS | `k8s-providers/versions.sh` | k3s installers |
 

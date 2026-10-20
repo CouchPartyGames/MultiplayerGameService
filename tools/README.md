@@ -4,7 +4,7 @@ Installers for developer CLIs used across the repository. Each script runs on Li
 
 | Script | Purpose |
 | --- | --- |
-| `prek-install.sh` | Install [prek](https://github.com/j178/prek), a faster drop-in replacement for pre-commit. On Linux it installs the statically linked musl build, which runs on any distro. Version set by `PREK_VERSION` (default: `latest`). |
+| `prek-install.sh` | Install [prek](https://github.com/j178/prek), the hook runner this repository uses in place of pre-commit. On Linux it installs the statically linked musl build, which runs on any distro. Version set by `PREK_VERSION` (default: `latest`). |
 | `yamlfmt-install.sh` | Install [yamlfmt](https://github.com/google/yamlfmt). Version set by `YAMLFMT_VERSION` (default: `latest`). |
 
 ```bash
@@ -22,13 +22,28 @@ If `INSTALL_DIR` is not on `PATH`, the script prints a note. Add the directory t
 
 ## Pre-commit hooks with prek
 
-prek reads the existing `.pre-commit-config.yaml`, so it runs the same hooks as pre-commit (Terraform, yamllint, Helm, and chart-testing; see `terraform/README.md` and `helm/README.md`). Use either tool; you don't need both. The hooks still call local binaries such as `terraform`, `tflint`, `helm`, and `ct`, so install those with their scripts first.
+The repository's hooks run with prek, not pre-commit. They are split across two configs:
 
-| pre-commit | prek |
+| Config | Hooks | Docs |
+| --- | --- | --- |
+| `.pre-commit-config.yaml` | yamllint, Helm, and chart-testing | `helm/README.md` |
+| `terraform/.pre-commit-config.yaml` | TFLint, `terraform fmt`, `terraform validate`, and `terraform test` | `terraform/README.md` |
+
+prek finds the nested config automatically (workspace mode) and runs its hooks from `terraform/`. Plain pre-commit reads only the root config, so it would silently skip the Terraform hooks. The hooks call local binaries such as `terraform`, `tflint`, `helm`, and `ct`, so install those with their scripts first.
+
+Run these commands from the repository root:
+
+| Task | Command |
 | --- | --- |
-| `pre-commit install` | `prek install --force` |
-| `pre-commit run --all-files` | `prek run --all-files` |
-| `pre-commit run --files <files>` | `prek run --files <files>` |
-| `pre-commit run ct-install --hook-stage manual` | `prek run ct-install --stage manual` |
+| Install the Git hook, once per clone | `prek install` |
+| Run every hook on all files | `prek run --all-files` |
+| Run hooks on specific files | `prek run --files <files>` |
+| Run only the Terraform hooks | `prek run terraform/ --all-files` |
+| Run one hook from the Terraform config | `prek run terraform:terraform_fmt --all-files` |
+| Run the manual chart install test | `prek run ct-install --stage manual` |
+| List discovered configs and hooks | `prek list` |
+| Skip the Terraform hooks for one commit | `PREK_SKIP=terraform/ git commit` |
 
-If you already ran `pre-commit install`, use `prek install --force`. Without `--force`, prek moves pre-commit's Git hook to `.git/hooks/pre-commit.legacy` and runs it after its own, so every hook runs twice. To switch back to pre-commit, run `prek uninstall` and then `pre-commit install`.
+After adding or moving a config, stage it and run `prek run --all-files --refresh` so prek picks it up.
+
+If you previously ran `pre-commit install`, run `prek install --force` instead. Without `--force`, prek moves pre-commit's Git hook to `.git/hooks/pre-commit.legacy` and runs it after its own, so the root hooks run twice.

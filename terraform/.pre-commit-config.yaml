@@ -1,0 +1,38 @@
+# Terraform hooks, run by prek (https://github.com/j178/prek) in workspace mode alongside
+# the root .pre-commit-config.yaml. prek runs these hooks from terraform/, so `files`
+# patterns and the filenames hooks receive are relative to this directory.
+# The hooks call the local `terraform` and `tflint` binaries; install them with
+# terraform/tools/terraform-install.sh and terraform/tools/tflint-install.sh.
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.109.2
+    hooks:
+      # Lints each directory with changed .tf files using the shared .tflint.hcl at the
+      # repository root (same check as CI's tflint job). The hook runs `tflint --init` itself.
+      # Under prek, __GIT_WORKING_DIR__ resolves to terraform/, hence the `..`.
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/../.tflint.hcl
+          - --args=--format=compact
+
+      # Fails when any .tf or .tftest.hcl file is not in canonical format (same check as CI's `terraform fmt -check`).
+      - id: terraform_fmt
+        args:
+          - --args=-check
+          - --args=-diff
+
+      # Runs `terraform init -backend=false` when needed, then `terraform validate`,
+      # in each directory with changed .tf files.
+      - id: terraform_validate
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+
+  - repo: local
+    hooks:
+      # Runs `terraform test` (mock-provider unit tests in tests/*.tftest.hcl) in each
+      # configuration with changed files. Needs no cloud credentials.
+      - id: terraform-test
+        name: terraform test
+        entry: scripts/terraform-test.sh
+        language: script
+        files: ^[^/]+/.*\.(tf|tftest\.hcl)$
