@@ -2,6 +2,74 @@
 
 This directory contains Terraform and Atlantis installation scripts in `scripts/` and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
 
+## Root and child modules
+
+New Terraform code is split into root modules, which you run, and child modules, which root modules call:
+
+```text
+terraform/
+├── envs/                          # root modules: one per cloud account
+│   └── <cloud>-<accountid>/       # e.g. aws-123456789012
+└── modules/                       # child modules: reusable, never run directly
+    └── <cloud-provider>/          # aws, azure, or gcp
+        └── <module-name>/         # e.g. aws/s3-terraform-state
+```
+
+The `aws/`, `azure/`, and `gcp/` configurations described below predate this layout and are root modules in their own right.
+
+### Root modules: `envs/<cloud>-<accountid>/`
+
+A root module is a directory you run `terraform init`, `plan`, and `apply` in, and it has its own state. Each one manages a single cloud account, so a bad apply cannot reach another account. Name the directory after the cloud and its account identifier:
+
+| Cloud | `<accountid>` | Example |
+| --- | --- | --- |
+| AWS | 12-digit account ID | `envs/aws-123456789012/` |
+| Azure | Subscription ID | `envs/azure-00000000-0000-0000-0000-000000000000/` |
+| GCP | Project ID | `envs/gcp-multiplayer-demo/` |
+
+A root module holds everything specific to its account:
+
+- The `backend` block that says where its state lives.
+- The `provider` blocks, with the region and account or project they target.
+- Variable values. Commit a `terraform.tfvars.example`; `.gitignore` keeps the real `*.tfvars` out of Git.
+- `module` blocks that call child modules, plus any resources too specific to reuse.
+- Its `.terraform.lock.hcl`, committed so every run uses the same provider builds.
+
+Run a root module from the repository root:
+
+```bash
+terraform -chdir=terraform/envs/aws-123456789012 init
+terraform -chdir=terraform/envs/aws-123456789012 plan -out=tfplan
+```
+
+### Child modules: `modules/<cloud-provider>/<module-name>/`
+
+A child module is a reusable group of resources, such as `modules/aws/s3-terraform-state/`, which creates the bucket and lock table for an S3 state backend. It has no state of its own: its resources live in the state of each root module that calls it. Group modules by provider, using `aws`, `azure`, or `gcp`.
+
+Write child modules so any root module can call them:
+
+- Do not add `provider` or `backend` blocks. The calling root module configures both, and a module with its own `provider` block cannot be used with `count` or `for_each`.
+- Declare `required_version` and `required_providers` in `versions.tf`. Use a lower bound and a major-version limit, such as `~> 6.0`, so the root module can pick the exact version. TFLint fails a module without them.
+- Give every variable a `description` and `type`, and add `validation` where a bad value would otherwise fail during apply. Give every output a `description`.
+- Take account-specific values, such as names, regions, and KMS keys, as variables instead of hard-coding them.
+- Add a `README.md` with inputs, outputs, and a usage example, and unit tests in `tests/unit.tftest.hcl` that use a mock provider.
+
+Call a child module from a root module with a relative path:
+
+```hcl
+module "terraform_state" {
+  source = "../../modules/aws/s3-terraform-state"
+
+  bucket_name = "multiplayer-demo-tfstate-123456789012"
+}
+```
+
+After changing a child module, run `plan` in every root module that calls it, because the change applies to all of them.
+
+### Checks for the new directories
+
+The pre-commit hooks lint, validate, and test changed files under `envs/` and `modules/` like any other configuration. CI does not check them yet: the `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list only `terraform/aws`, `terraform/azure`, and `terraform/gcp`. `./terraform/scripts/terraform-test.sh` with no arguments also skips them. Run a module's tests by passing one of its files, for example `./terraform/scripts/terraform-test.sh terraform/modules/aws/s3-terraform-state/main.tf`.
+
 ## Install Terraform
 
 On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
