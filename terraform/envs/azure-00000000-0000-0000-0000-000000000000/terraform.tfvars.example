@@ -1,0 +1,4 @@
+# Replace with your workstation or VPN's public IPv4 address/range.
+admin_cidrs = ["203.0.113.10/32"]
+# Replace with an existing Microsoft Entra group containing cluster administrators.
+admin_group_object_ids = ["00000000-0000-0000-0000-000000000000"]

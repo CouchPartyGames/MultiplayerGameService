@@ -1,6 +1,6 @@
 # Terraform
 
-This directory contains Terraform and Atlantis installation scripts in `scripts/` and separate GCP/GKE, Azure/AKS, and AWS/EKS configurations. Run the commands below from the repository root.
+This directory contains Terraform and Atlantis installation scripts in `scripts/`, and GCP/GKE, Azure/AKS, and AWS/EKS cluster configurations split into root modules in `envs/` and child modules in `modules/`. Run the commands below from the repository root.
 
 ## Root and child modules
 
@@ -14,8 +14,6 @@ terraform/
     └── <cloud-provider>/          # aws, azure, or gcp
         └── <module-name>/         # e.g. aws/s3-terraform-state
 ```
-
-The `aws/`, `azure/`, and `gcp/` configurations described below predate this layout and are root modules in their own right.
 
 ### Root modules: `envs/<cloud>-<accountid>/`
 
@@ -66,9 +64,19 @@ module "terraform_state" {
 
 After changing a child module, run `plan` in every root module that calls it, because the change applies to all of them.
 
+### Current root and child modules
+
+| Root module | Calls |
+| --- | --- |
+| `envs/aws-123456789012/` | `modules/aws/eks/` |
+| `envs/azure-00000000-0000-0000-0000-000000000000/` | `modules/azure/aks/` |
+| `envs/gcp-multiplayer-demo/` | `modules/gcp/gke/` |
+
+`modules/aws/s3-terraform-state/` is not called yet. The account IDs in the root module names are placeholders: rename the directory and replace the ID inside it, then update the matching paths in `atlantis.yaml` and `.github/workflows/terraform.yaml`.
+
 ### Checks for the new directories
 
-The pre-commit hooks lint, validate, and test changed files under `envs/` and `modules/` like any other configuration. CI does not check them yet: the `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list only `terraform/aws`, `terraform/azure`, and `terraform/gcp`. `./terraform/scripts/terraform-test.sh` with no arguments also skips them. Run a module's tests by passing one of its files, for example `./terraform/scripts/terraform-test.sh terraform/modules/aws/s3-terraform-state/main.tf`.
+The pre-commit hooks lint, validate, and test changed files under `envs/` and `modules/`. The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
 
 ## Install Terraform
 
@@ -129,10 +137,10 @@ Run these commands from the repository root. Pass the config as an absolute path
 2. Lint one configuration, the same way CI does:
 
    ```bash
-   tflint --chdir=terraform/aws --config="$PWD/.tflint.hcl" --format=compact
+   tflint --chdir=terraform/envs/aws-123456789012 --config="$PWD/.tflint.hcl" --format=compact
    ```
 
-   Replace `terraform/aws` with `terraform/azure` or `terraform/gcp` for the others.
+   Replace the path with any other directory under `terraform/envs/` or `terraform/modules/`.
 
 3. Or lint every configuration in one run:
 
@@ -154,22 +162,22 @@ TFLint exits non-zero when it finds an issue and prints each one as `file:line:c
 
 - To turn a rule off everywhere, add a `rule` block to `.tflint.hcl`, for example `rule "terraform_unused_declarations" { enabled = false }`. This affects every configuration, so prefer a line-level ignore.
 
-The `tflint` job in `.github/workflows/terraform.yaml` lints `terraform/aws`, `terraform/azure`, and `terraform/gcp` on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job. The `terraform_tflint` pre-commit hook runs the same check on commit (see [Pre-commit hooks](#pre-commit-hooks)).
+The `tflint` job in `.github/workflows/terraform.yaml` lints each root and child module on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job. The `terraform_tflint` pre-commit hook runs the same check on commit (see [Pre-commit hooks](#pre-commit-hooks)).
 
 The config does not yet include the provider rulesets (`tflint-ruleset-aws`, `tflint-ruleset-azurerm`, `tflint-ruleset-google`), which check things like invalid instance types and regions. To add one, add a `plugin` block with its `source` and `version` to `.tflint.hcl` and run `tflint --init` again. CI passes `GITHUB_TOKEN` to `tflint --init` so plugin downloads from GitHub are not rate-limited.
 
 ## Unit tests
 
-Each configuration has unit tests in `<cloud>/tests/unit.tftest.hcl`, run by Terraform's native test framework. They use mock providers, so they need no cloud credentials and create no resources. Each `run` block plans the configuration and checks derived values, such as subnet ranges, the AKS DNS address, and the optional Agones firewall rule. Other runs pass bad inputs and expect the variable validations to reject them.
+Each child module has unit tests in `modules/<cloud-provider>/<module-name>/tests/unit.tftest.hcl`, run by Terraform's native test framework. They use mock providers, so they need no cloud credentials and create no resources. Each `run` block plans the module and checks derived values, such as subnet ranges, the AKS DNS address, and the optional Agones firewall rule. Other runs pass bad inputs and expect the variable validations to reject them.
 
-Run one configuration's tests from the repository root:
+Run one module's tests from the repository root:
 
 ```bash
-terraform -chdir=terraform/aws init -backend=false
-terraform -chdir=terraform/aws test
+terraform -chdir=terraform/modules/aws/eks init -backend=false
+terraform -chdir=terraform/modules/aws/eks test
 ```
 
-Or run every configuration's tests, initializing any that need it:
+Or run every module's tests, initializing any that need it:
 
 ```bash
 ./terraform/scripts/terraform-test.sh
@@ -208,36 +216,36 @@ npx skills add antonbabenko/terraform-skill
 
 ## GCP configuration
 
-`gcp/` defines a single-zone GKE cluster, its VPC and subnet, a node service account, and an optional Agones UDP firewall rule. It requires Terraform 1.5 through 1.x and Google provider 7.x. Before planning, authenticate to GCP and provide a project with billing enabled and the permissions needed to create these resources.
+`envs/gcp-multiplayer-demo/` calls `modules/gcp/gke/`, which defines a single-zone GKE cluster, its VPC and subnet, a node service account, and an optional Agones UDP firewall rule. It requires Terraform 1.5 through 1.x and Google provider 7.x. Before planning, authenticate to GCP and provide a project with billing enabled and the permissions needed to create these resources.
 
 ```bash
-cp terraform/gcp/terraform.tfvars.example terraform/gcp/terraform.tfvars
-# Edit project_id and admin_cidrs in terraform/gcp/terraform.tfvars.
-terraform -chdir=terraform/gcp init
-terraform -chdir=terraform/gcp plan
+cp terraform/envs/gcp-multiplayer-demo/terraform.tfvars.example terraform/envs/gcp-multiplayer-demo/terraform.tfvars
+# Set project_id in terraform/envs/gcp-multiplayer-demo/main.tf and admin_cidrs in terraform.tfvars.
+terraform -chdir=terraform/envs/gcp-multiplayer-demo init
+terraform -chdir=terraform/envs/gcp-multiplayer-demo plan
 ```
 
-Review the plan and estimated GCP costs before applying it. The cluster has deletion protection enabled by default.
+Review the plan and estimated GCP costs before applying it. See the [GCP setup](modules/gcp/gke/README.md) for permissions and deployment instructions. The cluster has deletion protection enabled by default.
 
 ## Azure configuration
 
-`azure/` defines a virtual network, subnet, managed cluster identity, and AKS cluster. It requires Terraform 1.5 through 1.x and AzureRM provider 4.x. See the [Azure setup](azure/README.md) for permissions, networking defaults, and deployment instructions.
+`envs/azure-00000000-0000-0000-0000-000000000000/` calls `modules/azure/aks/`, which defines a virtual network, subnet, managed cluster identity, and AKS cluster. It requires Terraform 1.5 through 1.x and AzureRM provider 4.x. See the [Azure setup](modules/azure/aks/README.md) for permissions, networking defaults, and deployment instructions.
 
 ```bash
 az login
-cp terraform/azure/terraform.tfvars.example terraform/azure/terraform.tfvars
-# Edit subscription_id, admin_cidrs, and admin_group_object_ids.
-terraform -chdir=terraform/azure init
-terraform -chdir=terraform/azure plan
+cp terraform/envs/azure-00000000-0000-0000-0000-000000000000/terraform.tfvars.example terraform/envs/azure-00000000-0000-0000-0000-000000000000/terraform.tfvars
+# Set subscription_id in versions.tf, and admin_cidrs and admin_group_object_ids in terraform.tfvars.
+terraform -chdir=terraform/envs/azure-00000000-0000-0000-0000-000000000000 init
+terraform -chdir=terraform/envs/azure-00000000-0000-0000-0000-000000000000 plan
 ```
 
 ## AWS configuration
 
-`aws/` defines a VPC with public/private subnets across two zones, NAT routing, IAM roles, and an EKS cluster with managed nodes. It requires Terraform 1.5 through 1.x and AWS provider 6.x. See the [AWS setup](aws/README.md) for authentication, administrator access, and deployment instructions.
+`envs/aws-123456789012/` calls `modules/aws/eks/`, which defines a VPC with public/private subnets across two zones, NAT routing, IAM roles, and an EKS cluster with managed nodes. It requires Terraform 1.5 through 1.x and AWS provider 6.x. See the [AWS setup](modules/aws/eks/README.md) for authentication, administrator access, and deployment instructions.
 
 ```bash
-cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
-# Edit admin_cidrs and admin_principal_arns; authenticate with your AWS profile.
-terraform -chdir=terraform/aws init
-terraform -chdir=terraform/aws plan
+cp terraform/envs/aws-123456789012/terraform.tfvars.example terraform/envs/aws-123456789012/terraform.tfvars
+# Set the account ID and region in versions.tf, and admin_cidrs and admin_principal_arns in terraform.tfvars.
+terraform -chdir=terraform/envs/aws-123456789012 init
+terraform -chdir=terraform/envs/aws-123456789012 plan
 ```

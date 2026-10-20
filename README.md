@@ -36,9 +36,8 @@ helm/external-values/
     infra/, games-orchestrator/   Values grouped by area (older files sit directly in local/)
   prod/                Unused
 scripts/               Cluster bootstrap (minikube, kind, k3s) and CLI installers
-terraform/gcp/         Terraform for a GCP VPC, subnet, and GKE Standard cluster
-terraform/azure/       Terraform for an Azure virtual network, subnet, and AKS cluster
-terraform/aws/         Terraform for an AWS VPC, subnets, and EKS cluster
+terraform/envs/        Terraform root modules, one per cloud account
+terraform/modules/     Terraform child modules: GKE, AKS, EKS, and an S3 state backend
 ```
 
 Every folder under `argocd/local/` except `general/` defines its own ArgoCD `AppProject`; `general/` uses the built-in `default` project. Most apps have two sources: the upstream Helm chart, and this repository, referenced as `$myRepo`, which provides the values files from `helm/external-values/`.
@@ -118,7 +117,7 @@ Stopping frees CPU and memory but keeps the cluster, ArgoCD, and synced apps for
 
 ## Status
 
-This is a work-in-progress demo. The local environment is the most complete. To create cloud infrastructure, follow the [GCP/GKE setup](terraform/gcp/README.md), [Azure/AKS setup](terraform/azure/README.md), or [AWS/EKS setup](terraform/aws/README.md). There are no production ArgoCD manifests yet.
+This is a work-in-progress demo. The local environment is the most complete. To create cloud infrastructure, follow the [GCP/GKE setup](terraform/modules/gcp/gke/README.md), [Azure/AKS setup](terraform/modules/azure/aks/README.md), or [AWS/EKS setup](terraform/modules/aws/eks/README.md). There are no production ArgoCD manifests yet.
 
 ## License
 
