@@ -15,7 +15,7 @@ There is no repository-wide build command or automated test suite. ArgoCD tracks
 
 ## Coding Style & Naming Conventions
 
-Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `local/games-orchestrator/agones-local.yaml` under `helm/external-values/`. See `argocd/CODING-STANDARD.md`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions.
+Use two spaces for YAML indentation and spaces, never tabs. Keep environment-specific names explicit, such as `local/games-orchestrator/agones-local.yaml` under `helm/external-values/`. See `argocd/CODING-STANDARD.md`. Place new ArgoCD applications under the matching `argocd/<environment>/<area>/` directory. Keep `spec.project` aligned with that area's AppProject and ensure chart repositories appear in its `sourceRepos`. When moving a values file, update every `$myRepo/helm/external-values/...` reference. Follow existing Bash script conventions and quote variable expansions. When changing anything under `terraform/envs/` or `terraform/modules/`, use the `terraform-env-docs` skill to update the affected envs' READMEs.
 
 ## Testing Guidelines
 

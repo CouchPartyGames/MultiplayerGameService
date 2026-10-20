@@ -36,3 +36,12 @@ repos:
         entry: scripts/terraform-test.sh
         language: script
         files: ^[^/]+/.*\.(tf|tftest\.hcl)$
+
+      # Checks envs/<cloud>-<id>/README.md against envs/README.template.md, and fails
+      # when an env's configuration (or a child module it calls) changes without a new
+      # "Most Recent Changes" entry. See the terraform-env-docs skill.
+      - id: env-docs-check
+        name: env docs check
+        entry: scripts/env-docs-check.sh
+        language: script
+        files: ^(envs|modules)/

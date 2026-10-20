@@ -76,7 +76,7 @@ After changing a child module, run `plan` in every root module that calls it, be
 
 ### Checks for the new directories
 
-The hooks in `terraform/.pre-commit-config.yaml` lint, validate, and test changed files under `envs/` and `modules/`. The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
+The hooks in `terraform/.pre-commit-config.yaml` lint, validate, and test changed files under `envs/` and `modules/`. A new root module also needs a `README.md` from `envs/README.template.md` (see [Environment docs](#environment-docs)). The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
 
 ## Install Terraform
 
@@ -187,7 +187,7 @@ When you change a variable validation or the logic behind a derived value, add o
 
 ## Pre-commit hooks
 
-`terraform/.pre-commit-config.yaml` runs four hooks on commits that touch `terraform/`, each in the directories with changed files. [prek](https://github.com/j178/prek) runs them in workspace mode, together with the root `.pre-commit-config.yaml`, from the `terraform/` directory, so their `files` patterns and the paths they receive are relative to `terraform/`. Plain pre-commit reads only the root config and skips these hooks, so use prek (see `tools/README.md`).
+`terraform/.pre-commit-config.yaml` runs five hooks on commits that touch `terraform/`, each in the directories with changed files. [prek](https://github.com/j178/prek) runs them in workspace mode, together with the root `.pre-commit-config.yaml`, from the `terraform/` directory, so their `files` patterns and the paths they receive are relative to `terraform/`. Plain pre-commit reads only the root config and skips these hooks, so use prek (see `tools/README.md`).
 
 | Hook | Check |
 |------|-------|
@@ -195,6 +195,7 @@ When you change a variable validation or the logic behind a derived value, add o
 | `terraform_fmt` | `terraform fmt -check -diff`; fails on unformatted `.tf` or `.tftest.hcl` files. Run `terraform fmt -recursive terraform` to fix them. |
 | `terraform_validate` | `terraform init -backend=false` when needed, then `terraform validate` |
 | `terraform-test` | `terraform test` via `scripts/terraform-test.sh` |
+| `env-docs-check` | Env README structure, and a new changelog entry for each env whose configuration changed, via `scripts/env-docs-check.sh` (see [Environment docs](#environment-docs)) |
 
 Install Terraform and TFLint with the scripts above, install prek with `./tools/prek-install.sh`, then install the hooks once per clone from the repository root with `prek install`. To run only the Terraform hooks without committing:
 
@@ -203,6 +204,19 @@ prek run terraform/ --all-files
 ```
 
 To skip them for one commit, run `PREK_SKIP=terraform/ git commit`.
+
+## Environment docs
+
+Each root module has a `README.md` in `envs/<cloud>-<accountid>/` with four sections, defined by [`envs/README.template.md`](envs/README.template.md): Purpose, Cloud Provider Details (account, region, and VPC), a Mermaid Diagram, and Most Recent Changes. A changelog line looks like `10/16/2026 - Updated node instance type (#42 - Jete)`, newest first.
+
+Any change to an env's `.tf`, `.tfvars`, or `.hcl` files, or to a child module it calls, needs a new changelog line in that env's README. Test-only changes under `tests/` don't. `scripts/env-docs-check.sh` enforces the template and the new line:
+
+- The `env-docs-check` prek hook checks staged changes. `#TBD` is allowed while the PR doesn't exist yet.
+- The `env-docs` job in `.github/workflows/terraform.yaml` checks each pull request against its base branch. Every new line must use the PR's number.
+
+To list the envs that a set of files affects, run `./terraform/scripts/env-docs-check.sh --list-affected <files>`.
+
+AI agents follow the `terraform-env-docs` skill (`.agents/skills/terraform-env-docs/`). It fills in values from the configuration, writes the entry with `#TBD`, opens the PR, and then pushes a commit that replaces `#TBD` with the PR number. Until that commit lands, the first CI run on the PR fails. Set `TF_DOCS_AUTHOR` to choose the author name; it defaults to `git config user.name`.
 
 ## Terraform skill for AI agents
 

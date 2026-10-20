@@ -96,3 +96,19 @@ jobs:
 
       - name: tflint
         run: tflint --chdir=${{ matrix.dir }} --config="$GITHUB_WORKSPACE/.tflint.hcl" --format=compact
+
+  # Checks each env README against terraform/envs/README.template.md, and requires every
+  # env whose configuration changed in this PR to add a changelog entry with this PR's number.
+  env-docs:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: env docs check
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: terraform/scripts/env-docs-check.sh --base "origin/$BASE_REF" --pr "$PR_NUMBER"
