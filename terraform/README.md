@@ -76,7 +76,7 @@ After changing a child module, run `plan` in every root module that calls it, be
 
 ### Checks for the new directories
 
-The pre-commit hooks lint, validate, and test changed files under `envs/` and `modules/`. The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
+The hooks in `terraform/.pre-commit-config.yaml` lint, validate, and test changed files under `envs/` and `modules/`. The `validate` and `tflint` jobs in `.github/workflows/terraform.yaml` list each root and child module, so add new ones to both matrices. `./terraform/scripts/terraform-test.sh` with no arguments tests every child module.
 
 ## Install Terraform
 
@@ -187,7 +187,7 @@ When you change a variable validation or the logic behind a derived value, add o
 
 ## Pre-commit hooks
 
-`.pre-commit-config.yaml` runs four hooks on commits that touch `terraform/`, each in the directories with changed files:
+`terraform/.pre-commit-config.yaml` runs four hooks on commits that touch `terraform/`, each in the directories with changed files. [prek](https://github.com/j178/prek) runs them in workspace mode, together with the root `.pre-commit-config.yaml`, from the `terraform/` directory, so their `files` patterns and the paths they receive are relative to `terraform/`. Plain pre-commit reads only the root config and skips these hooks, so use prek (see `tools/README.md`).
 
 | Hook | Check |
 |------|-------|
@@ -196,11 +196,13 @@ When you change a variable validation or the logic behind a derived value, add o
 | `terraform_validate` | `terraform init -backend=false` when needed, then `terraform validate` |
 | `terraform-test` | `terraform test` via `scripts/terraform-test.sh` |
 
-Install Terraform and TFLint with the scripts above, then install the hooks once per clone with `pre-commit install`. To run them without committing:
+Install Terraform and TFLint with the scripts above, install prek with `./tools/prek-install.sh`, then install the hooks once per clone from the repository root with `prek install`. To run only the Terraform hooks without committing:
 
 ```bash
-pre-commit run --files $(git ls-files terraform)
+prek run terraform/ --all-files
 ```
+
+To skip them for one commit, run `PREK_SKIP=terraform/ git commit`.
 
 ## Terraform skill for AI agents
 
