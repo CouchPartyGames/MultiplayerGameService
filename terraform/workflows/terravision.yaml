@@ -6,10 +6,10 @@ name: terravision
 # GitHub runs workflows only from .github/workflows/, so copy this file to
 # .github/workflows/terravision.yaml to enable it.
 #
-# Each root module is planned against empty local state, so the diagram shows every resource
-# the code defines and the job never reads or locks the real state. The providers still
-# authenticate during plan, so each cloud needs read-only OIDC credentials, set as the
-# repository variables below. A cloud whose variables are unset is skipped with a notice.
+# terraform/scripts/diagram.sh does the drawing, the same way it does locally: it plans each
+# root module against empty local state, so the diagram shows every resource the code defines
+# and the job never reads or locks the real state. The providers still authenticate during
+# plan, so each cloud needs read-only OIDC credentials, set as the repository variables below. A cloud whose variables are unset is skipped with a notice.
 #
 #   aws:   TERRAVISION_AWS_ROLE_ARN
 #   gcp:   TERRAVISION_GCP_WORKLOAD_IDENTITY_PROVIDER, TERRAVISION_GCP_SERVICE_ACCOUNT
@@ -21,6 +21,7 @@ on:
       - "terraform/envs/**"
       - "terraform/modules/**"
       - "terraform/tools/version.sh"
+      - "terraform/scripts/diagram.sh"
       - ".github/workflows/terravision.yaml"
   push:
     branches: [main]
@@ -28,6 +29,7 @@ on:
       - "terraform/envs/**"
       - "terraform/modules/**"
       - "terraform/tools/version.sh"
+      - "terraform/scripts/diagram.sh"
       - ".github/workflows/terravision.yaml"
   workflow_dispatch:
 
@@ -121,21 +123,6 @@ jobs:
           # The wrapper adds its own output around stdout, which would corrupt plan.json and graph.dot.
           terraform_wrapper: false
 
-      # The override replaces any backend block with local state, which starts empty in CI.
-      # The real *.tfvars are gitignored, so plan with the committed example values.
-      - name: terraform plan
-        if: steps.creds.outputs.ready == 'true'
-        run: |
-          cat > backend_override.tf <<'EOF'
-          terraform {
-            backend "local" {}
-          }
-          EOF
-          terraform init -input=false
-          terraform plan -input=false -lock=false -var-file=terraform.tfvars.example -out=tfplan
-          terraform show -json tfplan > plan.json
-          terraform graph > graph.dot
-
       - if: steps.creds.outputs.ready == 'true'
         uses: actions/setup-python@v5
         with:
@@ -149,16 +136,13 @@ jobs:
           sudo apt-get install -y graphviz
           pip install "terravision==$TERRAVISION_VERSION"
 
-      - name: terravision draw
+      # The real *.tfvars are gitignored, so the script plans with terraform.tfvars.example.
+      - name: diagram
         if: steps.creds.outputs.ready == 'true'
+        working-directory: .
         env:
-          OUTFILE: ${{ runner.temp }}/diagrams/${{ matrix.cloud }}
-        run: |
-          mkdir -p "$(dirname "$OUTFILE")"
-          for format in png svg; do
-            terravision draw --source . --planfile plan.json --graphfile graph.dot \
-              --format "$format" --outfile "$OUTFILE"
-          done
+          DIAGRAM_DIR: ${{ runner.temp }}/diagrams
+        run: terraform/scripts/diagram.sh "${{ matrix.dir }}"
 
       - if: steps.creds.outputs.ready == 'true'
         uses: actions/upload-artifact@v4

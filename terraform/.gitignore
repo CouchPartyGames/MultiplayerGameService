@@ -7,3 +7,11 @@
 crash.log
 crash.*.log
 # Commit .terraform.lock.hcl to keep provider selection reproducible.
+
+# TerraVision diagrams (scripts/diagram.sh) and the files a manual run of its steps leaves behind.
+.diagrams/
+.terraform-diagram/
+backend_override.tf
+tfplan
+plan.json
+graph.dot
