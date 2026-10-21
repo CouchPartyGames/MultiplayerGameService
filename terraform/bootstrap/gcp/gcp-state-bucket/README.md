@@ -38,7 +38,7 @@ This is a bootstrap root module (see [Bootstrap](../../../README.md#bootstrap)):
    terraform -chdir=terraform/bootstrap/gcp/gcp-state-bucket apply tfplan
    ```
 
-3. Move this module's own state into the bucket it created. Add a backend block to `versions.tf`:
+3. Move this module's own state into the bucket it created. In `backend.tf`, replace the `local` backend with the commented-out `gcs` block (a module can have only one backend):
 
    ```hcl
    terraform {
