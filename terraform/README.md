@@ -249,9 +249,21 @@ AI agents follow the `terraform-env-docs` skill (`.agents/skills/terraform-env-d
 
 ## Architecture diagrams
 
+`scripts/diagram.sh` draws a diagram of a root module with [TerraVision](https://github.com/patrickchugh/terravision). Install Terraform, Graphviz (`sudo apt install graphviz` or `brew install graphviz`), and TerraVision, then sign in to any account on the module's cloud. TerraVision has no standalone binary, so install it as a Python tool:
+
+```bash
+uv tool install --python 3.12 terravision==0.56.0
+gcloud auth application-default login
+./terraform/scripts/diagram.sh terraform/envs/gcp-multiplayer-demo
+```
+
+With no arguments the script draws every root module in `envs/`. It writes `<module-dir>.png` and `.svg` to `terraform/.diagrams/`; set `DIAGRAM_DIR` to choose another directory and `DIAGRAM_FORMATS` to choose formats, such as `DIAGRAM_FORMATS="svg drawio"`. Variables come from `terraform.tfvars`, or `terraform.tfvars.example` when there is none.
+
+The script plans against empty local state: it writes a temporary `backend_override.tf` that points the backend at a temp directory and deletes it when it finishes. The real state is never read or locked, and the diagram shows every resource the code defines. It initializes into `.terraform-diagram/` instead of `.terraform/`, so your normal backend setup is untouched, and it reads `.terraform.lock.hcl` without changing it. The providers still authenticate during plan, so a cloud sign-in is required, but any read-only account on the same cloud works. The Azure module reads `azurerm_client_config`, so it needs `az login`; the AWS provider's `allowed_account_ids` rejects every account until the placeholder ID is replaced. `.gitignore` covers the output and the files the script, or a manual run of the same steps, leaves behind.
+
 `workflows/terravision.yaml` draws a PNG and SVG diagram of each root module in `envs/` with [TerraVision](https://github.com/patrickchugh/terravision) and uploads them as the `terravision-<cloud>` workflow artifacts. GitHub runs workflows only from `.github/workflows/`, so copy the file to `.github/workflows/terravision.yaml` to enable it.
 
-The workflow plans each root module against empty local state, using a `backend_override.tf` it writes in CI and the committed `terraform.tfvars.example`, so it never reads or locks the real state. The providers still authenticate during plan, so give each cloud a read-only OIDC identity and set these repository variables. A cloud with unset variables is skipped with a notice.
+The workflow runs `scripts/diagram.sh`, which plans with the committed `terraform.tfvars.example` because CI has no `terraform.tfvars`. The providers still authenticate during plan, so give each cloud a read-only OIDC identity and set these repository variables. A cloud with unset variables is skipped with a notice.
 
 | Cloud | Repository variables |
 | --- | --- |
