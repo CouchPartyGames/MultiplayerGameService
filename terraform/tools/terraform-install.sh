@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Install Terraform on macOS or Linux. Override TERRAFORM_VERSION or INSTALL_DIR as needed.
 source "$(dirname "${BASH_SOURCE[0]}")/version.sh"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 case "$(uname -s)" in
   Darwin) OS="darwin"; SHA256=(shasum -a 256) ;;
@@ -31,6 +31,7 @@ curl -fsSLo "$TMP_DIR/SHA256SUMS" "$BASE_URL/terraform_${TERRAFORM_VERSION}_SHA2
 )
 
 unzip -p "$TMP_DIR/$ARCHIVE" terraform > "$TMP_DIR/terraform"
+mkdir -p "$INSTALL_DIR" 2>/dev/null || sudo mkdir -p "$INSTALL_DIR"
 if [ -w "$INSTALL_DIR" ]; then
   install -m 0755 "$TMP_DIR/terraform" "$INSTALL_DIR/terraform"
 else

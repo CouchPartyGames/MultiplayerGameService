@@ -115,10 +115,10 @@ On macOS or Linux (amd64 or arm64), install `curl` and `unzip`, then run:
 ./terraform/tools/terraform-install.sh
 ```
 
-The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `/usr/local/bin`. It uses `sudo` if that directory is not writable. Set `INSTALL_DIR` to choose another existing directory. The version comes from `TERRAFORM_VERSION` in `tools/version.sh`; override it for one run with:
+The script downloads Terraform from HashiCorp, checks the archive against its SHA-256 checksum, and installs the binary in `~/.local/bin`, creating the directory if needed. Make sure `~/.local/bin` is on your `PATH`. Set `INSTALL_DIR` to choose another directory; the script uses `sudo` if that directory is not writable. The version comes from `TERRAFORM_VERSION` in `tools/version.sh`; override it for one run with:
 
 ```bash
-TERRAFORM_VERSION=1.16.4 ./terraform/tools/terraform-install.sh
+TERRAFORM_VERSION=1.17.0 ./terraform/tools/terraform-install.sh
 ```
 
 Check the installed version with `terraform version`.
