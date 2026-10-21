@@ -1,0 +1,20 @@
+terraform {
+  required_version = ">= 1.5, < 2.0"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+
+  default_labels = {
+    project    = "multiplayer-demo"
+    managed_by = "terraform"
+    component  = "bootstrap"
+  }
+}

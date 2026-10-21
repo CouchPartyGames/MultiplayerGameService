@@ -105,7 +105,7 @@ They differ from `envs/` in how they run:
   `.gitignore` keeps the local `terraform.tfstate` out of Git. Delete it once the state is migrated.
 - **Destroying them breaks every env.** Deleting the state bucket or the CI roles cuts off every root module in that account, so protect them, for example with `prevent_destroy` or bucket deletion protection.
 
-`bootstrap/aws/aws-github-oidc/` creates the GitHub Actions OIDC provider, an IAM role workflows assume, and the role's inline policy; see its [README](bootstrap/aws/aws-github-oidc/README.md). The GCP and Azure directories have no configuration yet.
+`bootstrap/aws/aws-github-oidc/` creates the GitHub Actions OIDC provider, an IAM role workflows assume, and the role's inline policy; see its [README](bootstrap/aws/aws-github-oidc/README.md). `bootstrap/gcp/gcp-state-bucket/` creates the GCS bucket for the `gcs` backend, which locks state natively; see its [README](bootstrap/gcp/gcp-state-bucket/README.md). The Azure directory has no configuration yet.
 
 ## Install Terraform
 
