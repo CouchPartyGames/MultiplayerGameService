@@ -1,0 +1,168 @@
+name: terravision
+
+# Draws an architecture diagram of each root module in terraform/envs/ with TerraVision
+# (https://github.com/patrickchugh/terravision) and uploads it as a workflow artifact.
+#
+# GitHub runs workflows only from .github/workflows/, so copy this file to
+# .github/workflows/terravision.yaml to enable it.
+#
+# Each root module is planned against empty local state, so the diagram shows every resource
+# the code defines and the job never reads or locks the real state. The providers still
+# authenticate during plan, so each cloud needs read-only OIDC credentials, set as the
+# repository variables below. A cloud whose variables are unset is skipped with a notice.
+#
+#   aws:   TERRAVISION_AWS_ROLE_ARN
+#   gcp:   TERRAVISION_GCP_WORKLOAD_IDENTITY_PROVIDER, TERRAVISION_GCP_SERVICE_ACCOUNT
+#   azure: TERRAVISION_AZURE_CLIENT_ID, TERRAVISION_AZURE_TENANT_ID
+
+on:
+  pull_request:
+    paths:
+      - "terraform/envs/**"
+      - "terraform/modules/**"
+      - "terraform/tools/version.sh"
+      - ".github/workflows/terravision.yaml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/envs/**"
+      - "terraform/modules/**"
+      - "terraform/tools/version.sh"
+      - ".github/workflows/terravision.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  # Keep in step with the TerraVision release you have tested locally.
+  TERRAVISION_VERSION: "0.56.0"
+
+jobs:
+  diagram:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cloud: aws
+            dir: terraform/envs/aws-123456789012
+          - cloud: azure
+            dir: terraform/envs/azure-00000000-0000-0000-0000-000000000000
+          - cloud: gcp
+            dir: terraform/envs/gcp-multiplayer-demo
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fork pull requests get no OIDC token, so they are skipped like a cloud without credentials.
+      - id: creds
+        working-directory: .
+        env:
+          CLOUD: ${{ matrix.cloud }}
+          FORK: ${{ github.event.pull_request.head.repo.fork }}
+          AWS_ROLE_ARN: ${{ vars.TERRAVISION_AWS_ROLE_ARN }}
+          GCP_PROVIDER: ${{ vars.TERRAVISION_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ vars.TERRAVISION_GCP_SERVICE_ACCOUNT }}
+          AZURE_CLIENT_ID: ${{ vars.TERRAVISION_AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.TERRAVISION_AZURE_TENANT_ID }}
+        run: |
+          ready=false
+          case "$CLOUD" in
+            aws) [ -n "$AWS_ROLE_ARN" ] && ready=true ;;
+            gcp) [ -n "$GCP_PROVIDER" ] && [ -n "$GCP_SERVICE_ACCOUNT" ] && ready=true ;;
+            azure) [ -n "$AZURE_CLIENT_ID" ] && [ -n "$AZURE_TENANT_ID" ] && ready=true ;;
+          esac
+          if [ "$FORK" = "true" ]; then
+            ready=false
+          fi
+          if [ "$ready" != "true" ]; then
+            echo "::notice::Skipping the $CLOUD diagram: its TERRAVISION_* credentials are not available to this run."
+          fi
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+
+      - if: steps.creds.outputs.ready == 'true' && matrix.cloud == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TERRAVISION_AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - if: steps.creds.outputs.ready == 'true' && matrix.cloud == 'gcp'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.TERRAVISION_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.TERRAVISION_GCP_SERVICE_ACCOUNT }}
+
+      # The azurerm provider exchanges the GitHub OIDC token itself; the subscription comes from
+      # the provider block.
+      - if: steps.creds.outputs.ready == 'true' && matrix.cloud == 'azure'
+        working-directory: .
+        run: |
+          {
+            echo "ARM_USE_OIDC=true"
+            echo "ARM_CLIENT_ID=${{ vars.TERRAVISION_AZURE_CLIENT_ID }}"
+            echo "ARM_TENANT_ID=${{ vars.TERRAVISION_AZURE_TENANT_ID }}"
+          } >> "$GITHUB_ENV"
+
+      - id: version
+        if: steps.creds.outputs.ready == 'true'
+        working-directory: .
+        run: |
+          source terraform/tools/version.sh
+          echo "terraform=$TERRAFORM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - if: steps.creds.outputs.ready == 'true'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ steps.version.outputs.terraform }}
+          # The wrapper adds its own output around stdout, which would corrupt plan.json and graph.dot.
+          terraform_wrapper: false
+
+      # The override replaces any backend block with local state, which starts empty in CI.
+      # The real *.tfvars are gitignored, so plan with the committed example values.
+      - name: terraform plan
+        if: steps.creds.outputs.ready == 'true'
+        run: |
+          cat > backend_override.tf <<'EOF'
+          terraform {
+            backend "local" {}
+          }
+          EOF
+          terraform init -input=false
+          terraform plan -input=false -lock=false -var-file=terraform.tfvars.example -out=tfplan
+          terraform show -json tfplan > plan.json
+          terraform graph > graph.dot
+
+      - if: steps.creds.outputs.ready == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install terravision
+        if: steps.creds.outputs.ready == 'true'
+        working-directory: .
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+          pip install "terravision==$TERRAVISION_VERSION"
+
+      - name: terravision draw
+        if: steps.creds.outputs.ready == 'true'
+        env:
+          OUTFILE: ${{ runner.temp }}/diagrams/${{ matrix.cloud }}
+        run: |
+          mkdir -p "$(dirname "$OUTFILE")"
+          for format in png svg; do
+            terravision draw --source . --planfile plan.json --graphfile graph.dot \
+              --format "$format" --outfile "$OUTFILE"
+          done
+
+      - if: steps.creds.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: terravision-${{ matrix.cloud }}
+          path: ${{ runner.temp }}/diagrams/
+          if-no-files-found: error

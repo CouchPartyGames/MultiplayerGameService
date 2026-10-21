@@ -247,6 +247,20 @@ To list the envs that a set of files affects, run `./terraform/scripts/env-docs-
 
 AI agents follow the `terraform-env-docs` skill (`.agents/skills/terraform-env-docs/`). It fills in values from the configuration, writes the entry with `#TBD`, opens the PR, and then pushes a commit that replaces `#TBD` with the PR number. Until that commit lands, the first CI run on the PR fails. Set `TF_DOCS_AUTHOR` to choose the author name; it defaults to `git config user.name`.
 
+## Architecture diagrams
+
+`workflows/terravision.yaml` draws a PNG and SVG diagram of each root module in `envs/` with [TerraVision](https://github.com/patrickchugh/terravision) and uploads them as the `terravision-<cloud>` workflow artifacts. GitHub runs workflows only from `.github/workflows/`, so copy the file to `.github/workflows/terravision.yaml` to enable it.
+
+The workflow plans each root module against empty local state, using a `backend_override.tf` it writes in CI and the committed `terraform.tfvars.example`, so it never reads or locks the real state. The providers still authenticate during plan, so give each cloud a read-only OIDC identity and set these repository variables. A cloud with unset variables is skipped with a notice.
+
+| Cloud | Repository variables |
+| --- | --- |
+| AWS | `TERRAVISION_AWS_ROLE_ARN` |
+| GCP | `TERRAVISION_GCP_WORKLOAD_IDENTITY_PROVIDER`, `TERRAVISION_GCP_SERVICE_ACCOUNT` |
+| Azure | `TERRAVISION_AZURE_CLIENT_ID`, `TERRAVISION_AZURE_TENANT_ID` |
+
+The placeholder account IDs in the root modules have to match the real accounts first: the AWS provider's `allowed_account_ids` rejects any other account. When you add a root module, add it to the workflow's matrix.
+
 ## Terraform skill for AI agents
 
 The repository includes Anton Babenko's [terraform-skill](https://github.com/antonbabenko/terraform-skill), an agent skill with Terraform and OpenTofu guidance for writing, reviewing, and debugging modules, tests, CI, security scans, and state operations. The skill files live in `.agents/skills/terraform-skill/`, `.claude/skills/terraform-skill` links to them for Claude Code, and `skills-lock.json` records the source and content hash.
