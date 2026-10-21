@@ -1,0 +1,12 @@
+{
+    "id": "",
+    "name": "",
+    "description": "",
+    "owners": {
+        "infrastructure": [],
+        "application": []
+    },
+    "build": {
+        "pr": ""
+    }
+}

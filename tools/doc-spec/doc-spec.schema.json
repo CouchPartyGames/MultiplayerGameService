@@ -1,0 +1,72 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/CouchPartyGames/MultiplayerGameService/tools/stack-docs/doc-spec.schema.json",
+    "title": "Stack documentation specification",
+    "description": "Metadata for a stack, such as a cluster under gitops/managed/.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "description", "owners", "build"],
+    "properties": {
+        "$schema": {
+            "description": "Optional path or URL to this schema, for editor support.",
+            "type": "string"
+        },
+        "id": {
+            "description": "Documentation template id.",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "maxLength": 63
+        },
+        "name": {
+            "description": "Human-readable name of the stack.",
+            "type": "string",
+            "pattern": "\\S"
+        },
+        "description": {
+            "description": "What the stack is and it's purpose.",
+            "type": "string",
+            "pattern": "\\S"
+        },
+        "owners": {
+            "description": "Who owns each layer of the stack.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["infrastructure", "application"],
+            "properties": {
+                "infrastructure": {
+                    "description": "Owners of the infrastructure layer (cloud resources, Terraform).",
+                    "$ref": "#/$defs/ownerList"
+                },
+                "application": {
+                    "description": "Owners of the application layer (Kubernetes workloads, Helm releases).",
+                    "$ref": "#/$defs/ownerList"
+                }
+            }
+        },
+        "build": {
+            "description": "How the stack is built and delivered.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pr"],
+            "properties": {
+                "pr": {
+                    "description": "URL of the pull request that builds or last changed the stack.",
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://"
+                }
+            }
+        }
+    },
+    "$defs": {
+        "ownerList": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "pattern": "\\S"
+            }
+        }
+    }
+}
