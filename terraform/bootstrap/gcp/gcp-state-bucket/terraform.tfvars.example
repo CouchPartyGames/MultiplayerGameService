@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars (ignored by Git) and adjust.
+
+project_id = "multiplayer-demo"
+
+# Bucket names are global; the default is "<project_id>-tfstate".
+# bucket_name = "multiplayer-demo-tfstate"
+
+location = "US-EAST1"
+
+# Identities that run Terraform against this bucket (CI, Atlantis, admins).
+state_users = [
+  # "serviceAccount:atlantis@multiplayer-demo.iam.gserviceaccount.com",
+]
