@@ -1,7 +1,1 @@
-# yamlfmt settings for digger/ (https://github.com/google/yamlfmt), kept compatible
-# with .yamllint.yaml.
-formatter:
-  type: basic
-  indent: 2
-  retain_line_breaks_single: true
-  pad_line_comments: 1
+../.yamlfmt

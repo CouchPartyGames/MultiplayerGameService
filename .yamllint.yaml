@@ -1,5 +1,5 @@
----
-# yamllint rules for argocd/ manifests, matching section 1 of argocd/CODING-STANDARD.md.
+# yamllint rules for digger/, kept compatible with .yamlfmt and with the yq output of
+# scripts/digger-missing-projects.sh.
 extends: default
 
 rules:
@@ -7,13 +7,13 @@ rules:
   indentation:
     spaces: 2
     indent-sequences: true
-  # Every manifest starts with `---`.
-  document-start:
-    present: true
-  trailing-spaces: enable
-  new-line-at-end-of-file: enable
-  # Chart values and Helm parameters often run long; line length is not part of the standard.
+  # GitHub workflows and digger.yml don't start with `---`.
+  document-start: disable
+  # Workflow expressions and PR bodies run long.
   line-length: disable
-  # Kubernetes fields use true/false; allow yes/no only inside quoted strings.
+  # yamlfmt and yq put one space before an inline comment.
+  comments:
+    min-spaces-from-content: 1
+  # GitHub workflows use `on:` as a key.
   truthy:
     check-keys: false
