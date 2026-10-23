@@ -1,0 +1,75 @@
+# .pre-commit-config.yaml
+# Install with: pre-commit install   (installs both pre-commit and pre-push hooks)
+
+minimum_pre_commit_version: "3.2.0"
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+repos:
+  # ---- General hygiene --------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0 # run `pre-commit autoupdate` to bump
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.pcf$ # pkl test expected-output files must stay byte-exact
+      - id: end-of-file-fixer
+        exclude: \.pcf$
+      - id: check-yaml
+      - id: check-json # catches hand-edited / conflicted PklProject.deps.json
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # ---- Secrets: target configs and settings files must never carry credentials --
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # ---- Pkl / formae -------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Formatting (Pkl 0.30+). Rewrites files in place; pre-commit fails the
+      # commit if anything changed so you can review and re-stage.
+      # If formae embeds a Pkl older than 0.30, add: --grammar-version 1
+      - id: pkl-format
+        name: pkl format
+        entry: pkl format --write
+        language: system
+        files: (\.pkl$|(^|/)PklProject$)
+
+      # Lint: modules must import packages via PklProject dependencies (@name/...)
+      # so every version is pinned and checksummed in PklProject.deps.json.
+      - id: pkl-no-direct-package-imports
+        name: pkl imports go through PklProject deps
+        language: pygrep
+        entry: '(import\*?|amends|extends)\s+"package://'
+        files: \.pkl$
+
+      # Validate: evaluate every environment entrypoint. This type-checks the
+      # forma against the formae/plugin schemas and every component it uses.
+      # Runs on any Pkl change because a component edit can break any env.
+      - id: pkl-eval-envs
+        name: pkl eval (environment formas)
+        entry: tools/pkl-hook.sh eval
+        language: system
+        files: (\.pkl$|(^|/)PklProject$)
+        pass_filenames: false
+
+      # Tests: run `pkl test` in each Pkl project touched by the commit.
+      - id: pkl-test
+        name: pkl test
+        entry: tools/pkl-hook.sh test
+        language: system
+        files: (\.pkl$|\.pcf$|(^|/)PklProject$)
+        require_serial: true # one invocation, so each project is tested once
+
+      # Lockfile check: re-resolve dependencies and fail if PklProject.deps.json
+      # is stale. Runs on push because it needs network access (and your GCS
+      # token for private packages).
+      - id: pkl-deps-up-to-date
+        name: PklProject.deps.json up to date
+        entry: tools/pkl-hook.sh resolve
+        language: system
+        files: (^|/)PklProject$
+        require_serial: true
+        stages: [pre-push]
