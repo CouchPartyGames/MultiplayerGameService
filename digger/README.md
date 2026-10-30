@@ -13,12 +13,12 @@ This directory holds draft configuration for [Digger](https://github.com/diggerh
 
 ## `digger.yml`
 
-Each entry under `projects` is a root module that Digger plans and applies on its own. A project has a `name`, a `dir` relative to the repository root, a `workflow`, and an optional `depends_on` list of projects to apply first. The two workflows are:
+Digger builds its projects from the blocks under `generate_projects`. Each block has an `include` glob relative to the repository root and a `workflow`; every directory the glob matches that contains `.tf` files becomes a root module that Digger plans and applies on its own. Generated projects can't declare `depends_on`, so modules in a block have no apply order. The two workflows are:
 
 - `default`: `init` then `plan`; `apply`.
 - `prod`: the same, plus a `checkov` scan before `plan`. It plans when a PR is pushed and unlocks when the PR closes or merges to the default branch.
 
-The projects in the file are examples whose `infra/...` directories don't exist in this repository. The first sync PR replaces them with the real envs (see [Keeping projects in sync](#keeping-projects-in-sync)).
+The blocks in the file are examples whose `infra/...` directories don't exist in this repository, so they generate no projects yet.
 
 ## `digger-workflow.yml`
 

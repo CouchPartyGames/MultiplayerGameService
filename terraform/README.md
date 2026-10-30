@@ -153,20 +153,20 @@ TFLINT_VERSION=0.64.0 ./terraform/tools/tflint-install.sh
 
 ## Lint with TFLint
 
-TFLint catches problems that `terraform validate` does not, such as unused variables and outputs, deprecated syntax, missing `required_providers` version constraints, and naming issues. The shared config is `.tflint.hcl` at the repository root. It enables the bundled `terraform` ruleset with the `recommended` preset, and the AWS, Azure, and GCP configurations all use it.
+TFLint catches problems that `terraform validate` does not, such as unused variables and outputs, deprecated syntax, missing `required_providers` version constraints, and naming issues. The shared config is `terraform/.tflint.hcl`. It enables the bundled `terraform` ruleset with the `recommended` preset, and the AWS, Azure, and GCP configurations all use it.
 
 Run these commands from the repository root. Pass the config as an absolute path: TFLint resolves `--config` relative to the directory it lints, so a relative path breaks with `--chdir`.
 
-1. Install the plugins the config lists. Run this once, and again after you change the `plugin` blocks in `.tflint.hcl`:
+1. Install the plugins the config lists. Run this once, and again after you change the `plugin` blocks in `terraform/.tflint.hcl`:
 
    ```bash
-   tflint --init --config="$PWD/.tflint.hcl"
+   tflint --init --config="$PWD/terraform/.tflint.hcl"
    ```
 
 2. Lint one configuration, the same way CI does:
 
    ```bash
-   tflint --chdir=terraform/envs/aws-123456789012 --config="$PWD/.tflint.hcl" --format=compact
+   tflint --chdir=terraform/envs/aws-123456789012 --config="$PWD/terraform/.tflint.hcl" --format=compact
    ```
 
    Replace the path with any other directory under `terraform/envs/` or `terraform/modules/`.
@@ -174,7 +174,7 @@ Run these commands from the repository root. Pass the config as an absolute path
 3. Or lint every configuration in one run:
 
    ```bash
-   tflint --recursive --config="$PWD/.tflint.hcl" --format=compact
+   tflint --recursive --config="$PWD/terraform/.tflint.hcl" --format=compact
    ```
 
 TFLint exits non-zero when it finds an issue and prints each one as `file:line:col: severity - message (rule_name)`. To fix it:
@@ -189,11 +189,11 @@ TFLint exits non-zero when it finds an issue and prints each one as `file:line:c
   }
   ```
 
-- To turn a rule off everywhere, add a `rule` block to `.tflint.hcl`, for example `rule "terraform_unused_declarations" { enabled = false }`. This affects every configuration, so prefer a line-level ignore.
+- To turn a rule off everywhere, add a `rule` block to `terraform/.tflint.hcl`, for example `rule "terraform_unused_declarations" { enabled = false }`. This affects every configuration, so prefer a line-level ignore.
 
-The `tflint` job in `.github/workflows/terraform.yaml` lints each root and child module on every pull request and push to `main` that touches `terraform/` or `.tflint.hcl`. A finding fails the job. The `terraform_tflint` pre-commit hook runs the same check on commit (see [Pre-commit hooks](#pre-commit-hooks)).
+The `tflint` job in `.github/workflows/terraform.yaml` lints each root and child module on every pull request and push to `main` that touches `terraform/`. A finding fails the job. The `terraform_tflint` pre-commit hook runs the same check on commit (see [Pre-commit hooks](#pre-commit-hooks)).
 
-The config does not yet include the provider rulesets (`tflint-ruleset-aws`, `tflint-ruleset-azurerm`, `tflint-ruleset-google`), which check things like invalid instance types and regions. To add one, add a `plugin` block with its `source` and `version` to `.tflint.hcl` and run `tflint --init` again. CI passes `GITHUB_TOKEN` to `tflint --init` so plugin downloads from GitHub are not rate-limited.
+The config does not yet include the provider rulesets (`tflint-ruleset-aws`, `tflint-ruleset-azurerm`, `tflint-ruleset-google`), which check things like invalid instance types and regions. To add one, add a `plugin` block with its `source` and `version` to `terraform/.tflint.hcl` and run `tflint --init` again. CI passes `GITHUB_TOKEN` to `tflint --init` so plugin downloads from GitHub are not rate-limited.
 
 ## Unit tests
 
@@ -220,7 +220,7 @@ When you change a variable validation or the logic behind a derived value, add o
 
 | Hook | Check |
 |------|-------|
-| `terraform_tflint` | TFLint with the shared `.tflint.hcl` |
+| `terraform_tflint` | TFLint with the shared `terraform/.tflint.hcl` |
 | `terraform_fmt` | `terraform fmt -check -diff`; fails on unformatted `.tf` or `.tftest.hcl` files. Run `terraform fmt -recursive terraform` to fix them. |
 | `terraform_validate` | `terraform init -backend=false` when needed, then `terraform validate` |
 | `terraform-test` | `terraform test` via `scripts/terraform-test.sh` |

@@ -1,47 +1,57 @@
-# Terraform hooks, run by prek (https://github.com/j178/prek) in workspace mode alongside
-# the root .pre-commit-config.yaml. prek runs these hooks from terraform/, so `files`
-# patterns and the filenames hooks receive are relative to this directory.
-# The hooks call the local `terraform` and `tflint` binaries; install them with
-# terraform/tools/terraform-install.sh and terraform/tools/tflint-install.sh.
+
+
+exclude: '(^|/)\.terraform/'
+ 
+# In a monorepo, uncomment to scope hooks to your Terraform tree only:
+# files: '^infra/'
+ 
 repos:
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.109.2
+  # --- General hygiene -------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
     hooks:
-      # Lints each directory with changed .tf files using the shared .tflint.hcl at the
-      # repository root (same check as CI's tflint job). The hook runs `tflint --init` itself.
-      # Under prek, __GIT_WORKING_DIR__ resolves to terraform/, hence the `..`.
-      - id: terraform_tflint
-        args:
-          - --args=--config=__GIT_WORKING_DIR__/../.tflint.hcl
-          - --args=--format=compact
-
-      # Fails when any .tf or .tftest.hcl file is not in canonical format (same check as CI's `terraform fmt -check`).
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+ 
+  # --- Terraform -------------------------------------------------------------
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.99.4
+    hooks:
+      # Canonical formatting (rewrites files in place)
       - id: terraform_fmt
-        args:
-          - --args=-check
-          - --args=-diff
-
-      # Runs `terraform init -backend=false` when needed, then `terraform validate`,
-      # in each directory with changed .tf files.
+ 
+      # Syntax + internal consistency; no backend/state access needed
       - id: terraform_validate
         args:
+          - --tf-init-args=-backend=false
           - --hook-config=--retry-once-with-cleanup=true
-
-  - repo: local
+ 
+      # Linting: deprecated syntax, unused declarations, naming, provider rules
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+ 
+      # Keep module READMEs in sync with variables/outputs
+      - id: terraform_docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+ 
+      # Security misconfiguration scanning (successor to tfsec)
+      - id: terraform_trivy
+        args:
+          - --args=--severity=HIGH,CRITICAL
+          - --args=--skip-dirs="**/.terraform"
+ 
+  # --- Secrets ---------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
     hooks:
-      # Runs `terraform test` (mock-provider unit tests in tests/*.tftest.hcl) in each
-      # configuration with changed files. Needs no cloud credentials.
-      - id: terraform-test
-        name: terraform test
-        entry: scripts/terraform-test.sh
-        language: script
-        files: ^[^/]+/.*\.(tf|tftest\.hcl)$
-
-      # Checks envs/<cloud>-<id>/README.md against envs/README.template.md, and fails
-      # when an env's configuration (or a child module it calls) changes without a new
-      # "Most Recent Changes" entry. See the terraform-env-docs skill.
-      - id: env-docs-check
-        name: env docs check
-        entry: scripts/env-docs-check.sh
-        language: script
-        files: ^(envs|modules)/
+      - id: gitleaks

@@ -1,19 +1,16 @@
 # digger.yml — lives at the repo root
-# Each "project" is a Terraform root module Digger plans/applies independently.
+# Digger generates a project for each Terraform root module (a directory with .tf
+# files) that a block's include glob matches, and plans/applies each independently.
 
-projects:
-  - name: networking-staging
-    dir: infra/staging/networking
-    workflow: default
+generate_projects:
+  blocks:
+    - block_name: staging
+      include: "infra/staging/**"
+      workflow: default
 
-  - name: eks-staging
-    dir: infra/staging/eks
-    depends_on: ["networking-staging"] # applied after networking
-    workflow: default
-
-  - name: eks-prod
-    dir: infra/prod/eks
-    workflow: prod # stricter workflow below
+    - block_name: prod
+      include: "infra/prod/**"
+      workflow: prod # stricter workflow below
 
 workflows:
   default:
