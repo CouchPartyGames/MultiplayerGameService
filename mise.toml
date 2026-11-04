@@ -1,0 +1,10 @@
+[tools]
+helm = "latest"
+helmfile = { version = "latest", workflow = "releaser.yaml" }
+jq = "latest"
+minikube = "latest"
+terraform = "latest"
+tflint = "latest"
+tfsec = "latest"
+yamllint = "latest"
+yq = "latest"
