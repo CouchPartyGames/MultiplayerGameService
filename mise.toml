@@ -5,6 +5,7 @@ helmfile = { version = "latest", workflow = "releaser.yaml" }
 jq = "latest"
 minikube = "latest"
 terraform = "latest"
+terraform-docs = "latest"
 tflint = "latest"
 tfsec = "latest"
 yamllint = "latest"
