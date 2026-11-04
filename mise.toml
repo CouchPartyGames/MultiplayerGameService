@@ -1,4 +1,5 @@
 [tools]
+"aqua:runatlantis/atlantis" = "latest"
 helm = "latest"
 helmfile = { version = "latest", workflow = "releaser.yaml" }
 jq = "latest"
