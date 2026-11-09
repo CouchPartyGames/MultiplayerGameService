@@ -1,10 +1,10 @@
 
 
 exclude: '(^|/)\.terraform/'
- 
+
 # In a monorepo, uncomment to scope hooks to your Terraform tree only:
 # files: '^infra/'
- 
+
 repos:
   # --- General hygiene -------------------------------------------------------
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -18,38 +18,38 @@ repos:
       - id: check-added-large-files
         args: [--maxkb=500]
       - id: detect-private-key
- 
+
   # --- Terraform -------------------------------------------------------------
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.99.4
     hooks:
       # Canonical formatting (rewrites files in place)
       - id: terraform_fmt
- 
+
       # Syntax + internal consistency; no backend/state access needed
       - id: terraform_validate
         args:
           - --tf-init-args=-backend=false
           - --hook-config=--retry-once-with-cleanup=true
- 
+
       # Linting: deprecated syntax, unused declarations, naming, provider rules
       - id: terraform_tflint
         args:
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
- 
+
       # Keep module READMEs in sync with variables/outputs
       - id: terraform_docs
         args:
           - --hook-config=--path-to-file=README.md
           - --hook-config=--add-to-existing-file=true
           - --hook-config=--create-file-if-not-exist=true
- 
+
       # Security misconfiguration scanning (successor to tfsec)
       - id: terraform_trivy
         args:
           - --args=--severity=HIGH,CRITICAL
           - --args=--skip-dirs="**/.terraform"
- 
+
   # --- Secrets ---------------------------------------------------------------
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
